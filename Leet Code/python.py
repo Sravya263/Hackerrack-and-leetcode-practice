@@ -1,0 +1,5041 @@
+'''
+NOTES:
+
+1.  Ask clarifying questions, don't just assume, especially definitions.
+
+2.  If you have to store values from a list/array in a stack, and if values have duplicates, 
+    you can just store their indices instead of the values, and reference the index when needed, only works in some cases.
+
+3.  It's ok to do multiple O(n) passes over iterables, if it makes the code simpler and easier to understand, 
+    you don't always have to do everything in a single pass, look at 143 (Duplicate) for inspiration.
+
+4.  For LinkedList problems, using a dummy node simplifies the edge cases, 
+    such as when the head node needs to be removed, inspiration from 19.
+
+5.  If you're in a Google style interview, where you dry run your code, 
+    think of edge cases, like empty inputs, single element inputs, odd/even length inputs, etc.
+
+6.  Definition of a balanced tree is, for all nodes, the difference between depth of left subtree and right subtree 
+    is less than or equal to 1 level. It's NOT height of the tree is equal to least possible height for given number of nodes, 
+    IT'S NOT the same, inspiration from 543!!
+
+7. When using heapq with custom classes/objects, use a tuple of the form to be stored (key, unique_id, object),
+    - heapq does not support a custom comparator or key function.
+    - It compares tuple elements in order.
+    - First, it compares `key`.
+    - If keys are equal, it compares `unique_id`.
+    - Without a unique_id, Python would attempt to compare the objects
+    themselves, which raises a TypeError since class instances cannot be compared by default.
+    - Inspiration from 23
+
+8.  In some problems, a pointer-based solution is optimal (O(1) space), but it can be
+    time-consuming to implement, explain, and dry-run during interviews.
+    If an alternative approach exists using extra space (e.g., stack or list) that is simpler and faster to implement, 
+    it's often reasonable to choose it and explicitly tell the interviewer:
+
+    - The problem can be solved in O(1) space using pointers.
+    - However, the pointer approach is harder to implement and review under time constraints.
+    - For clarity and speed, I'm choosing a solution that uses extra space.
+
+    This is especially important in interviews where:
+    - Pointer manipulation is hard to visualize
+    - You must dry-run your code, and explain pointer transitions, which consumes significant time
+
+    That said, if the pointer logic is simple or strictly required, it may be worth taking the risk.
+    Inspiration from 25
+
+9.  Some problems are only possible to be solved using BFS, keep that in mind and don't always jump to DFS, 
+    analyze and visualize before you write code, don't take too much time though. Inspiration from 994
+'''
+
+
+
+from calendar import c
+from termios import TOSTOP
+from types import List, Optional
+from collections import defaultdict, Counter
+import re
+import bisect
+from functools import cache
+
+####### ARRAYS AND HASHING #######
+# 217. Contains Duplicate (https://leetcode.com/problems/contains-duplicate/description/) - Easy
+class Solution:
+    def containsDuplicate(self, nums: List[int]) -> bool:
+        prev = set()
+        for n in nums:
+            if n in prev:
+                return True
+            prev.add(n)
+        return False
+# 217. Contains Duplicate (https://leetcode.com/problems/contains-duplicate/description/) - Easy
+class Solution:
+    def containsDuplicate(self, nums: List[int]) -> bool:
+        return len(nums) != len(set(nums))
+    
+
+# 242. Valid Anagram (https://leetcode.com/problems/valid-anagram/description/) - Easy
+class Solution:
+    def isAnagram(self, s: str, t: str) -> bool:
+        return Counter(s) == Counter(t)
+    
+
+# 1. Two Sum (https://leetcode.com/problems/two-sum/description/) - Easy
+class Solution:
+    def twoSum(self, nums: List[int], target: int) -> List[int]:
+        visited = {}
+        for i,num in enumerate(nums):
+            if target - num in visited: return [i,visited[target-num]]
+            visited[num] = i
+
+
+# 49. Group Anagrams (https://leetcode.com/problems/group-anagrams/description/) - Medium
+class Solution:
+    def groupAnagrams(self, strs: List[str]) -> List[List[str]]:
+        hashMap = dict()
+        for word in strs:
+            key = "".join(sorted(word))
+            if key not in hashMap:
+                hashMap[key] = [word]
+            else:
+                hashMap[key].append(word)
+        return hashMap.values()
+# 49. Group Anagrams (https://leetcode.com/problems/group-anagrams/description/) - Medium
+class Solution:
+    def groupAnagrams(self, strs: List[str]) -> List[List[str]]:
+        hashMap = defaultdict(list)
+        for word in strs:
+            key = [0] * 26
+            for ch in word:
+                key[ord(ch) - ord('a')] += 1
+            key = str(key)
+            hashMap[key].append(word)
+        return hashMap.values()
+# 49. Group Anagrams (https://leetcode.com/problems/group-anagrams/description/) - Medium
+class Solution:
+    def groupAnagrams(self, strs: List[str]) -> List[List[str]]:
+        values = {'a':2,'b':3,'c':5,'d':7,'e':11,'f':13,'g':17,'h':19,'i':23,'j':29,'k':31,'l':37,'m':41,'n':43,'o':47,'p':53,'q':59,'r':61,'s':67,'t':71,'u':73,'v':79,'w':83,'x':89,'y':97,'z':101}
+        hashSet = defaultdict(list)
+        for word in strs:
+            h = 1
+            for ch in word: h *= values[ch]
+            hashSet[h].append(word)
+        return hashSet.values()
+
+
+# 347. Top K Frequent Elements (https://leetcode.com/problems/top-k-frequent-elements/description/) - Medium
+class Solution:
+    def topKFrequent(self, nums: List[int], k: int) -> List[int]:
+        freq = Counter(nums)
+        buckets = [[] for _ in range(len(nums))]
+        for num, count in freq.items():
+            buckets[count-1].append(num)
+        output = []
+        while len(output) != k:
+            output += buckets.pop()[0: k-len(output)]
+        return output
+
+
+# 238. Product of Array Except Self (https://leetcode.com/problems/product-of-array-except-self/description/) - Medium
+class Solution:
+    def productExceptSelf(self, nums: List[int]) -> List[int]:
+        p = 1
+        result = []
+        for num in nums:
+            result.append(p)
+            p *= num
+        p = nums[-1]
+        for i in range(len(nums)-2,-1,-1):
+            result[i] *= p
+            p *= nums[i]
+        return result
+
+
+# 36. Valid Sudoku (https://leetcode.com/problems/valid-sudoku/description/) - Medium
+class Solution:
+    def isValidSudoku(self, board: List[List[str]]) -> bool:
+        boxes = [[set() for _ in range(3)] for _ in range(3)]
+        col = [set() for _ in range(9)]
+        for i in range(9):
+            row = set()
+            for j in range(9):
+                num = board[i][j]
+                if num == ".": continue
+                if num in row or num in col[j] or num in boxes[i//3][j//3]: return False
+                row.add(num)
+                col[j].add(num)
+                boxes[i//3][j//3].add(num)
+        return True
+
+
+# 128. Longest Consecutive Sequence (https://leetcode.com/problems/longest-consecutive-sequence/description/) - Medium
+class Solution:
+    def longestConsecutive(self, nums: List[int]) -> int:
+        numSet = set(nums)
+        maxSeqLen = 0
+        while maxSeqLen < len(numSet):
+            num = numSet.pop()
+            longest = num+1
+            while longest in numSet:
+                numSet.remove(longest)
+                longest += 1
+            num = num-1
+            while num in numSet:
+                numSet.remove(num)
+                num -= 1
+            maxSeqLen = max(maxSeqLen, longest-num-1)
+        return maxSeqLen
+
+
+
+
+#######  TWO POINTERS  #######
+# 125. Valid Palindrome (https://leetcode.com/problems/valid-palindrome/description/) - Easy
+class Solution:
+    def isPalindrome(self, s: str) -> bool:
+        s = s.lower()
+        left = 0
+        right = len(s)-1
+        while left < len(s)-1 and not s[left].isalnum():
+            left += 1
+        while right > 0 and not s[right].isalnum():
+            right -= 1
+        while left < right:
+            if s[left] != s[right]: return False
+            left += 1
+            right -= 1
+            while left < len(s)-1 and not s[left].isalnum():
+                left += 1
+            while right > 0 and not s[right].isalnum():
+                right -= 1
+        return True
+# 125. Valid Palindrome (https://leetcode.com/problems/valid-palindrome/description/) - Easy
+class Solution:
+    def isPalindrome(self, s: str) -> bool:
+        s = re.sub(r'[^a-z0-9]+', '', s.lower())
+        return s == s[::-1]
+# 125. Valid Palindrome (https://leetcode.com/problems/valid-palindrome/description/) - Easy
+class Solution:
+    def isPalindrome(self, s: str) -> bool:
+        s = [ch for ch in s.lower() if ch.isalnum()]
+        return s == list(reversed(s))
+# 125. Valid Palindrome (https://leetcode.com/problems/valid-palindrome/description/) - Easy
+class Solution:
+    def isPalindrome(self, s: str) -> bool:
+        s = ''.join([ch for ch in s.lower() if ch.isalnum()])
+        return s[:len(s)//2] == s[-1:-(len(s)//2)-1:-1]
+
+
+# 167. Two Sum II - Input Array Is Sorted (https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/description/) - Medium
+class Solution:
+    def twoSum(self, numbers: List[int], target: int) -> List[int]:
+        left = 0
+        right = len(numbers)-1
+        while left < right:
+            current = numbers[right] + numbers[left]
+            if current == target:
+                return [left+1, right+1]
+            if current > target:
+                right -= 1
+            else:
+                left += 1
+        return []
+# 167. Two Sum II - Input Array Is Sorted (https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/description/) - Medium
+class Solution:
+    def twoSum(self, numbers: List[int], target: int) -> List[int]:
+        '''
+        Classic example of over engineering 😑. Don't follow this!
+        '''
+        left = 0
+        right = bisect.bisect_right(numbers, target-numbers[left])-1 
+        while right > left:
+            need = target - numbers[right]
+            left = bisect.bisect_left(numbers, need, left, right)
+            if numbers[left] == need:
+                return [left+1, right+1]
+            right = bisect.bisect_right(numbers, target-numbers[left], left, right)-1
+        return []
+
+
+# 15. 3Sum (https://leetcode.com/problems/3sum/description/) - Medium
+class Solution:
+    def threeSum(self, nums: List[int]) -> List[List[int]]:
+        '''
+        Classic example of over engineering 😑.
+            
+        - Time complexity: `nlog(n) + nk - k^2 : O( n^2 )`.
+        Where, `n` and `k` are total number of integers and negative integers respectively in given array, and `0 <= k <= n`.
+
+        - Space complexity: `O( log(n) )`.
+        Assuming, output array is not considered.
+        '''
+        nums.sort()
+        mid = bisect.bisect_left(nums, 0)
+        end = bisect.bisect_right(nums, -1*min(nums[0]+nums[1],nums[0]))-1
+        output = []
+        for end in range(end, mid-1, -1):
+            if end < len(nums)-1 and nums[end+1] == nums[end]:
+                continue
+            start = bisect.bisect_left(nums, -nums[end] -nums[end-1])
+            while start < mid:
+                target = -nums[end] - nums[start]
+                if target < nums[start]:
+                    break
+                if nums[bisect.bisect_right(nums, target, start+2, end)-1] == target:
+                    output.append( [nums[start], target, nums[end]] )
+                while start < mid and nums[start] == nums[start+1]:
+                    start+=1
+                start += 1
+        if mid < len(nums)-2 and nums[mid+2] == 0:
+            output.append([0,0,0])
+        return output
+
+
+# 42. Trapping Rain Water (https://leetcode.com/problems/trapping-rain-water/description/) - Hard
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    Where, n is the length of `height`
+    Two pointers approach is more optimal solution has space complexity of O(1)
+    Refer: https://neetcode.io/problems/trapping-rain-water/solution
+    '''
+    def trap(self, height: List[int]) -> int:
+        water = 0
+        rightMaxH = [0]*len(height)
+        
+        curMax = 0
+        for i in range(len(height)-1,-1,-1):
+            curMax = max(height[i], curMax)
+            rightMaxH[i] = curMax
+        
+        curMax = 0
+        for i,h in enumerate(height):
+            water += max(0, min(curMax, rightMaxH[i]) - h)
+            curMax = max(h, curMax)
+
+        return water
+
+
+
+
+####### SLIDING WINDOW #######
+
+# 567. Permutation in String (https://leetcode.com/problems/permutation-in-string/description/) - Medium
+class Solution:
+    def checkInclusion(self, s1: str, s2: str) -> bool:
+        need = Counter(s1)
+        have = Counter(s2[:len(s1)-1])
+        i = 0
+        for c in s2[len(s1)-1:]:
+            have[c] = have.get(c, 0) + 1
+            if need == have: return True
+            have[s2[i]] -= 1
+            i += 1
+        return need == have
+
+
+# 76. Minimum Window Substring (https://leetcode.com/problems/minimum-window-substring/description/) - Hard
+class Solution:
+    '''
+    Time Complexity: O(|s| + |t|) where |s| and |t| are the lengths of strings s and t respectively.
+    Space Complexity: O(1) assuming, output array is not considered.
+    '''
+    def minWindow(self, s: str, t: str) -> str:
+        if len(t) > len(s):
+            return ""
+        need = Counter(t)
+        have = Counter(s)
+        for c in need:
+            if need[c] > have.get(c, 0):
+                return ""
+
+        have = dict()
+        needCount = len(t)
+        minL, minR = 0, len(s)
+        l = 0
+
+        for r, c in enumerate(s):
+            amount = have.get(c, 0)
+            have[c] = amount + 1
+            if c in need and amount < need[c]:
+                needCount -= 1
+            if needCount == 0:
+                while l < r:
+                    if s[l] in need and have[s[l]] <= need[s[l]]:
+                        break
+                    have[s[l]] = have[s[l]] - 1
+                    l += 1
+
+                if r+1 - l < minR - minL:
+                    minR = r+1
+                    minL = l
+        return s[minL:minR]
+
+# 76. Minimum Window Substring (https://leetcode.com/problems/minimum-window-substring/description/) - Hard - Duplicate
+class Solution:
+    def minWindow(self, s: str, t: str) -> str:
+        if len(t) > len(s):
+            return ""
+        
+        oStart = 0
+        oEnd = len(s) + len(t)
+        freq = Counter(t)
+        need = len(freq)
+        available = defaultdict(int)
+        important = []
+        i = 0
+        
+        for end,c in enumerate(s):
+            if c in freq:
+                important.append(end)
+                available[c] += 1
+                if available[c] == freq[c]:
+                    need -= 1
+                if need == 0:
+                    while important[i] < end and available[s[important[i]]] > freq[s[important[i]]]:
+                        available[s[important[i]]] -= 1
+                        i+=1
+                    if oEnd-oStart > end-important[i]:
+                        oEnd = end
+                        oStart = important[i]
+                    available[s[important[i]]] -= 1
+                    i+=1
+                    need += 1
+        
+        return s[oStart: oEnd+1] if oEnd != len(s) + len(t) else ""
+    
+
+# 239. Sliding Window Maximum (https://leetcode.com/problems/sliding-window-maximum/description/) - Hard
+from collections import deque
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(k)
+    where, n is the size of nums and, k is the size of sliding window.
+    This is Monotonic Deque approach, the most optimal solution for this problem.
+    NOTE: Common pitfall is to use `>=` instead of `>` for condition `nums[i] > deck[-1]`,
+    To make sure this condition `deck[0] == nums[i-k]` doesn't cause trouble for duplicate instances, 
+    we should save duplicate instances too, so use `>` not `>=`.
+    Refer: https://neetcode.io/problems/sliding-window-maximum/solution
+    
+    
+    !!!  ####  NEEDS EXTRA ATTENTION  ####  !!!
+    '''
+    def maxSlidingWindow(self, nums: List[int], k: int) -> List[int]:
+        output = []
+        deck = deque()
+        for i in range(k):
+            while deck and nums[i] > deck[-1]:
+                deck.pop()
+            deck.append(nums[i])
+        output.append(deck[0])
+        for i in range(k, len(nums)):
+            if deck[0] == nums[i-k]:
+                deck.popleft()
+            while deck and nums[i] > deck[-1]:
+                deck.pop()
+            deck.append(nums[i])
+            output.append(deck[0])
+        return output
+
+
+
+####### STACK #######
+
+# 20. Valid Parentheses (https://leetcode.com/problems/valid-parentheses/description/) - Easy
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    where, n is the length of s.
+    NOTE: Using hashmap like a switch, makes it quicker instead of multiple if-else conditions.
+    '''
+    def isValid(self, s: str) -> bool:
+        openedBras = []
+        bras =  {
+                ')':'(',
+                ']':'[',
+                '}':'{'
+                }
+        for bra in s:
+            if bra in bras:
+                if not openedBras or openedBras.pop() != bras[bra]:
+                    return False
+            else:
+                openedBras.append(bra)
+        return False if openedBras else True
+
+
+# 155. Min Stack (https://leetcode.com/problems/min-stack/description/) - Medium
+# Your MinStack object will be instantiated and called as such:
+# obj = MinStack()
+# obj.push(val)
+# obj.pop()
+# param_3 = obj.top()
+# param_4 = obj.getMin()
+
+class MinStack:
+
+    def __init__(self):
+        self.minStack = []
+        self.stack = []
+
+    def push(self, val: int) -> None:
+        self.stack.append(val)
+        if self.minStack:
+            self.minStack.append(min(self.minStack[-1], val))
+        else:
+            self.minStack.append(val)
+
+    def pop(self) -> None:
+        self.stack.pop(-1)
+        self.minStack.pop(-1)
+
+    def top(self) -> int:
+        return self.stack[-1]
+
+    def getMin(self) -> int:
+        return self.minStack[-1]
+
+
+# 150. Evaluate Reverse Polish Notation (https://leetcode.com/problems/evaluate-reverse-polish-notation/description/) - Medium
+from collections import deque
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    where, n is the length of tokens.
+    NOTE: Using `//` or `math.floor()` for division is a Pitfall,
+    for negative values like `-0.4` they will return `-1`. So use `int()` 
+    For recursive solution, refer: https://neetcode.io/problems/evaluate-reverse-polish-notation/solution
+    '''
+    def evalRPN(self, tokens: List[str]) -> int:
+        stack = deque()
+        for token in tokens:
+            if token == '+':
+                stack.append(stack.pop() + stack.pop())
+            elif token == '-':
+                prevVal = stack.pop()
+                stack.append(stack.pop() - prevVal)
+            elif token == '*':
+                stack.append(stack.pop() * stack.pop())
+            elif token == '/':
+                prevVal = stack.pop()
+                stack.append(int(stack.pop() / prevVal)) # Use `int()`, not `//` or `math.floor()`, cause we might have negative values
+            else:
+                stack.append(int(token))
+        return stack.pop()
+
+
+# 739. Daily Temperatures (https://leetcode.com/problems/daily-temperatures/description/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    where, n is the length of temperatures.
+    Monotonic Decreasing Stack approach.
+    NOTE: By the way, you can solve this by only storing indices of temperatures in stack.
+    For some reason, you previously implement a hashmap along with stack, 
+    to keep track of indices, you were storing list of indices for duplicate temperatures, 
+    which is over engineering.
+    Later, you realized, you could just store tuple of (temperature, index) in stack to keep track of indices, which is simpler and preferred.
+    Remember, you can always store extra information in stack elements as tuple or objects.
+    Solved in 24 mins, all by yourself! Good job!
+    '''
+    def dailyTemperatures(self, temperatures: List[int]) -> List[int]:
+        stack = deque()
+        output = [0] * len(temperatures)
+        for i, temp in enumerate(temperatures):
+            while stack and temp > stack[-1][0]:
+                x = stack.pop()[1]
+                output[x] = i-x
+            stack.append((temp, i)) # Can also be done, by just storing indices in stack
+        return output
+
+# 739. Daily Temperatures (https://leetcode.com/problems/daily-temperatures/description/) - Medium - Duplicate
+class Solution:
+    def dailyTemperatures(self, temperatures: List[int]) -> List[int]:
+        stack = []
+        output = [0] * len(temperatures)
+        for i, temp in enumerate(temperatures):
+            while stack and temp > temperatures[stack[-1]]:
+                x = stack.pop()
+                output[x] = i-x
+            stack.append(i)
+        return output
+
+
+# 853. Car Fleet (https://leetcode.com/problems/car-fleet/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(n log(n))
+    Space Complexity: O(n)
+    where, n is the number of cars.
+    '''
+    def carFleet(self, target: int, position: List[int], speed: List[int]) -> int:
+        cars = [(position[i], speed[i]) for i in range(len(position))]
+        cars.sort(key=lambda x: x[0])
+        time = [(target - distance)/velocity for distance, velocity in cars]
+        fleets = []
+        for t in time:
+            while fleets and t >= fleets[-1]:
+                fleets.pop()
+            fleets.append(t)
+        return len(fleets)
+
+
+# 84. Largest Rectangle in Histogram (https://leetcode.com/problems/largest-rectangle-in-histogram/description/) - Hard
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    where, n is the length of heights.
+    NOTE: Since you're storing the possible start index instead of actual index of height in stack,
+    you'll have to add both height and index as tuple in stack, just the index wouldn't be sufficient.
+    Refer: https://neetcode.io/problems/largest-rectangle-in-histogram/solution for more details.
+    '''
+    def largestRectangleArea(self, heights: List[int]) -> int:
+        stack = []
+        area = 0
+        for i, height in enumerate(heights):
+            idx = i
+            while stack and stack[-1][0] > height:
+                prevHeight, idx = stack.pop()
+                area = max(area, prevHeight * (i-idx))
+            stack.append((height, idx))
+        for height, i in stack:
+            area = max(area, height * (len(heights)-i))
+        return area
+
+
+
+####### BINARY SEARCH #######
+
+# 704. Binary Search (https://leetcode.com/problems/binary-search/) - Easy
+class Solution:
+    '''
+    Time Complexity: O(log n)
+    Space Complexity: O(1)
+    where, n is the length of nums
+    Solved in 4 mins 36 secs, all by yourself! Good job!
+    '''
+    def search(self, nums: List[int], target: int) -> int:
+        l, r = 0, len(nums) - 1
+        while l <= r:
+            m = (l+r)//2
+            if nums[m] == target:
+                return m
+            elif nums[m] < target:
+                l = m+1
+            else:
+                r = m-1
+        return -1
+
+
+# 74. Search a 2D Matrix (https://leetcode.com/problems/search-a-2d-matrix/description/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(log(m * n))
+    Space Complexity: O(1)
+    where, m is number of rows, and n is number of columns of the matrix
+    Solved in 9 min, all by yourself, Good job!
+    '''
+    def searchMatrix(self, matrix: List[List[int]], target: int) -> bool:
+        m, n = len(matrix), len(matrix[0])
+        l, r = 0, m*n - 1
+        
+        while l <= r:
+            mid = (l+r)//2
+            i, j = mid//n, mid%n
+            if matrix[i][j] == target:
+                return True
+            elif target < matrix[i][j]:
+                r = mid-1
+            else:
+                l = mid+1
+        return False
+
+
+import math
+# 875. Koko Eating Bananas (https://leetcode.com/problems/koko-eating-bananas/description/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(n log m)
+    Space Complexity: O(1)
+    where, n is the length of piles, and m is the max of piles
+    Solved in 32 min all by yourself! Good job! But you over-engineered, look at duplicate solution for clean version of same code
+    '''
+    def minEatingSpeed(self, piles: List[int], h: int) -> int:
+        # if h < len(piles): # Good job for considering to write this but not needed, since problem constraints mention that h >= len(piles)
+        #     return -1
+        total = sum(piles)
+        piles.sort() # There's no point of sorting, just addition of (n log n) time
+        l = math.ceil(total/h)
+        r = piles[-1]
+
+        def isPossible(n):
+            time = 0
+            for i in range(len(piles)-1,-1,-1): # You thought since piles is sorted, adding time from big numbers will hit false condition quicker
+                time += math.ceil(piles[i]/n)
+                if time > h:
+                    return False
+            return True
+        
+        while l <= r:
+            k = (l + r)//2
+            if l == r:
+                return k if isPossible(k) else k+1 # how you solved edge cases you introduced
+            elif isPossible(k):
+                r = k-1
+            else:
+                l = k+1
+
+        return l if isPossible(l) else l+1 # you don't need this, just return l
+
+# 875. Koko Eating Bananas (https://leetcode.com/problems/koko-eating-bananas/description/) - Medium - Duplicate
+class Solution:
+    '''
+    Time Complexity: O(n log m)
+    Space Complexity: O(1)
+    where, n is the length of piles, and m is the max of piles
+    Same approach as before, but cleaner code
+    '''
+    def minEatingSpeed(self, piles: List[int], h: int) -> int:
+        l = math.ceil(sum(piles)/h)
+        r = max(piles)
+        
+        while l < r:
+            k = (l + r)//2
+            if sum(math.ceil(pile/k) for pile in piles) <= h:
+                r = k
+            else:
+                l = k+1
+        return l
+
+
+# 981. Time Based Key-Value Store (https://leetcode.com/problems/time-based-key-value-store/description/) - Medium
+from bisect import bisect, insort
+class TimeMap:
+    '''
+    Time Complexity: O(log n) per "get" call, O(1) per "set" call, O(m log n) for overall system
+    Space Complexity: O(1) for both "get" and "set", O(n) for overall system
+    where, n is the number of values, m is the number of calls
+    Solved in 18 min, by yourself, did lookup syntax for bisect!
+    '''
+
+    def __init__(self):
+        self.cache = {}
+
+    def set(self, key: str, value: str, timestamp: int) -> None:
+        # values = self.cache.get(key, [])
+        # insort(values, (timestamp, value), key=lambda x: x[0])
+        # self.cache[key] = values
+        self.cache.setdefault(key, []).append((timestamp, value)) # Constraints specify that timestamps strictly increase, so no need to sort, read the constrains bro!
+
+    def get(self, key: str, timestamp: int) -> str:
+        if key not in self.cache or len(self.cache) == 0:
+            return ""
+        values = self.cache[key]
+        i = bisect(values, timestamp, key=lambda x: x[0])
+        if values[i-1][0] <= timestamp:
+            return values[i-1][1]
+        return ""
+
+# Your TimeMap object will be instantiated and called as such:
+# obj = TimeMap()
+# obj.set(key,value,timestamp)
+# param_2 = obj.get(key,timestamp)
+
+
+
+####### LINKED LIST #######
+
+class ListNode:
+    def __init__(self, x):
+        self.val = x
+        self.next = None
+
+# 206. Reverse Linked List (https://leetcode.com/problems/reverse-linked-list/) - Easy
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(1)
+    where, n is the number of nodes in the linked list.
+    Note: It's easier to code, once you draw the linked list and pointers to visualize the process.
+    LeetCode already has a good visualizer of the example, but in interviews, you can draw it on paper/whiteboard.
+    '''
+    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        node = head
+        oldNode = None
+        while node:
+            temp = node.next
+            node.next = oldNode
+            oldNode = node
+            node = temp
+        return oldNode
+
+
+# 21. Merge Two Sorted Lists (https://leetcode.com/problems/merge-two-sorted-lists/description/) - Easy
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    '''
+    Time Complexity: O(n + m)
+    Space Complexity: O(1)
+    where, n and m are the number of nodes in list1 and list2 respectively.
+    '''
+    def mergeTwoLists(self, list1: Optional[ListNode], list2: Optional[ListNode]) -> Optional[ListNode]:
+        dummy = ListNode()
+        node = dummy
+        while list1 and list2:
+            if list1.val < list2.val:
+                temp = list1.next
+                list1.next = None
+                node.next = list1
+                node = list1
+                list1 = temp
+            else:
+                temp = list2.next
+                list2.next = None
+                node.next = list2
+                node = list2
+                list2 = temp
+        node.next = list1 if list1 else list2
+        return dummy.next
+
+
+# 141. Linked List Cycle (https://leetcode.com/problems/linked-list-cycle/description/) - Easy
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.next = None
+class Solution:
+    def hasCycle(self, head: Optional[ListNode]) -> bool:
+        runner = chaser = head
+        while runner:
+            runner = runner.next
+            if not runner:
+                return False 
+            runner = runner.next
+            chaser = chaser.next
+            if runner == chaser:
+                return True
+        return False
+
+
+# 143. Reorder List (https://leetcode.com/problems/reorder-list/description/) - Medium
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    where, n is the number of nodes in the linked list.
+    This is the most easiest to implement solution intuitively, 
+    however the most optimal solution uses O(1) space, look for below approach.
+    '''
+    def reorderList(self, head: Optional[ListNode]) -> None:
+        """
+        Do not return anything, modify head in-place instead.
+        """
+        order = []
+        node = head
+        while node:
+            order.append(node)
+            node = node.next
+        node = head
+        for i in range(len(order)-1,len(order)//2,-1):
+            temp = node.next
+            node.next = order[i]
+            order[i-1].next = None
+            order[i].next = temp
+            node = temp
+        
+# 143. Reorder List (https://leetcode.com/problems/reorder-list/description/) - Medium - Duplicate
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(1)
+    where, n is the number of nodes in the linked list.
+    This is the most optimal solution using O(1) space.
+    You use 2 pointers, 1 fast and 1 slow to find the middle of the linked list,
+    then reverse the second half of the linked list,
+    finally merge the 2 halves by alternating nodes from each half.
+    '''
+    def reorderList(self, head: Optional[ListNode]) -> None:
+        """
+        Do not return anything, modify head in-place instead.
+        """
+        # find middle
+        slow, fast = head, head.next
+        while fast and fast.next:
+            slow = slow.next
+            fast = fast.next.next
+
+        # reverse second half
+        second = slow.next
+        prev = slow.next = None
+        while second:
+            tmp = second.next
+            second.next = prev
+            prev = second
+            second = tmp
+
+        # merge two halfs
+        first, second = head, prev
+        while second:
+            tmp1, tmp2 = first.next, second.next
+            first.next = second
+            second.next = tmp1
+            first, second = tmp1, tmp2
+
+
+# 19. Remove Nth Node From End of List (https://leetcode.com/problems/remove-nth-node-from-end-of-list/) - Medium
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(1)
+    where, n is the number of nodes in the linked list.
+    NOTE: Using a dummy node simplifies the edge cases, such as when the head node needs to be removed.
+    '''
+    def removeNthFromEnd(self, head: Optional[ListNode], n: int) -> Optional[ListNode]:
+        dummy = ListNode()
+        dummy.next = head
+        slow, fast = dummy, head
+        for _ in range(n):
+            fast = fast.next
+        
+        while fast:
+            fast = fast.next
+            slow = slow.next
+        
+        deletedNode = slow.next
+        slow.next = None
+        if deletedNode:
+            slow.next = deletedNode.next
+            deletedNode.next = None
+        
+        return dummy.next
+
+
+class Node:
+    def __init__(self, x: int, next: 'Node' = None, random: 'Node' = None):
+        self.val = int(x)
+        self.next = next
+        self.random = random
+# 138. Copy List with Random Pointer (https://leetcode.com/problems/copy-list-with-random-pointer/description/) - Medium
+# Definition for a Node.
+# class Node:
+#     def __init__(self, x: int, next: 'Node' = None, random: 'Node' = None):
+#         self.val = int(x)
+#         self.next = next
+#         self.random = random
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    where, n is the number of nodes in the linked list.
+    NOTE: 
+    You had trouble with recursion, since you have to deal with cycles in the linked list,
+    the key is to cache the new node, without linking next and random pointers initially,
+    then link next and random pointers in subsequent recursive calls. Basically, break the links to avoid cycles, 
+    and use cache early unlike other problems where you normally cache in the end.
+    More optimal solution uses O(1) space
+    '''
+    def copyRandomList(self, head: 'Optional[Node]') -> 'Optional[Node]':
+        # return copy.deepcopy(head) # One liner for solution, but for interview, you need to implement the algorithm.
+        cache = {None: None}
+
+        def deepCopy(node):
+            if node in cache:
+                return cache[node]
+            copy = Node(node.val)
+            cache[node] = copy
+            copy.next = deepCopy(node.next)
+            copy.random = deepCopy(node.random)
+            return copy
+        return deepCopy(head)
+
+# 138. Copy List with Random Pointer (https://leetcode.com/problems/copy-list-with-random-pointer/description/) - Medium - Duplicate
+# Definition for a Node.
+# class Node:
+#     def __init__(self, x: int, next: 'Node' = None, random: 'Node' = None):
+#         self.val = int(x)
+#         self.next = next
+#         self.random = random
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(1)
+    where, n is the number of nodes in the linked list.
+    This is the most optimal solution using O(1) space
+    NOTE: Some interviewers care about original inputs being unchanged after function call, 
+    so if you plan on mutating the original list, mention that to interviewer, 
+    you can get the original list back by undoing the interweaving in last pass.
+    1. First pass: For each node in the original list, create a new node with the same value 
+    and insert it right after the original node. Looks like: A -> A' -> B -> B' -> C -> C' -> None after the first pass.
+    2. Second pass: Set the random pointers of the copied nodes.
+    3. Third pass: Separate the copied nodes to form the new list. Dummy -> A' -> B' -> C' -> None
+    4. Return the head of the copied list.
+    '''
+    def copyRandomList(self, head: 'Optional[Node]') -> 'Optional[Node]':
+        dummy = Node(0)
+        dummy.next = head
+        node = head
+        while node:
+            nextNode = node.next
+            copy = Node(node.val,nextNode)
+            node.next = copy
+            node = nextNode
+        node = head
+        while node:
+            random = node.random
+            copy = node.next
+            if random:
+                copy.random = random.next
+            node = copy.next
+        node = head
+        prev = dummy
+        while node:
+            copy = node.next
+            prev.next = copy
+            node.next = copy.next # Restore original list
+            node = copy.next
+            prev = copy
+        return dummy.next
+
+
+# 2. Add Two Numbers (https://leetcode.com/problems/add-two-numbers/description/) - Medium
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    '''
+    Time Complexity: O(max(n, m))
+    Space Complexity: O(max(n, m))
+    where, n and m are the number of nodes in l1 and l2 respectively.
+    Solved in 20 mins, all by yourself! Good job!
+    '''
+    def addTwoNumbers(self, l1: Optional[ListNode], l2: Optional[ListNode]) -> Optional[ListNode]:
+        dummy = ListNode()
+        node = dummy
+        carry = 0
+        while l1 and l2:
+            val = carry + l1.val + l2.val
+            carry = 1 if val > 9 else 0
+            val = val % 10
+            node.next = ListNode(val)
+            node = node.next
+            l1 = l1.next
+            l2 = l2.next
+        
+        r = l1 if l1 else l2
+        
+        while carry > 0 and r:
+            val = r.val + carry
+            carry = 1 if val > 9 else 0
+            node.next = ListNode(val%10)
+            node = node.next
+            r = r.next
+        if r:
+            node.next = r            
+
+        if carry > 0:
+            node.next = ListNode(carry)            
+
+        return dummy.next
+
+
+# 287. Find the Duplicate Number (https://leetcode.com/problems/find-the-duplicate-number/description/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(1)
+    where, n is the length of nums.
+    NOTE: If you haven't seen this approach before, it might be hard to come up with it in an interview.
+    KEEP REVIEWING THIS UNTIL ITS STORED IN LONG TERM MEMORY.
+    Reference: https://neetcode.io/problems/find-duplicate-integer/solution
+    This is Floyd's Tortoise and Hare (Cycle Detection) algorithm.
+    The idea is to use two pointers, one moving twice as fast as the other, to detect a cycle in single linked list.
+    When they meet, we find the entrance to the cycle, by using another 2 pointers which is the duplicate number.
+    The 2 slow pointers will always meet at the start of intersection of the cycle, and it's always gonna be the result.
+    Look at the reference for detailed explanation and proof!
+    '''
+    def findDuplicate(self, nums: List[int]) -> int:
+        fast = nums[nums[0]]
+        slow = nums[0]
+        while slow != fast:
+            fast = nums[nums[fast]]
+            slow = nums[slow]
+        newS = 0
+        while newS != slow:
+            newS = nums[newS]
+            slow = nums[slow]
+        return slow
+
+
+# 146. LRU Cache (https://leetcode.com/problems/lru-cache/) - Medium - Duplicate
+# Your LRUCache object will be instantiated and called as such:
+# obj = LRUCache(capacity)
+# param_1 = obj.get(key)
+# obj.put(key,value)
+from collections import OrderedDict
+class LRUCache:
+    '''
+    Time Complexity: O(1)
+    Space Complexity: O(n)
+    where, n is the capacity of cache
+    Solved in 10 mins the second time, referred OrderedDict syntax!
+    '''
+    def __init__(self, capacity: int):
+        self.q = OrderedDict()
+        self.size = capacity
+
+    def get(self, key: int) -> int:
+        if key not in self.q:
+            return -1
+        self.q.move_to_end(key, last=False)
+        return self.q[key]
+        
+    def put(self, key: int, value: int) -> None:
+        if len(self.q) >= self.size and key not in self.q:
+            self.q.popitem(last=True)
+        self.q[key] = value
+        self.q.move_to_end(key, last=False)
+
+# 146. LRU Cache (https://leetcode.com/problems/lru-cache/) - Medium - Duplicate
+# Your LRUCache object will be instantiated and called as such:
+# obj = LRUCache(capacity)
+# param_1 = obj.get(key)
+# obj.put(key,value)
+class DoubleNode:
+    def __init__(self, key=None, value=None):
+        self.key = key
+        self.value = value
+        self.left = None
+        self.right = None
+
+class LRUCache:
+    '''
+    Time Complexity: O(1) for both get and put operations.
+    Space Complexity: O(capacity), where capacity is the maximum number of items that can be stored in the cache.
+    This is the more traditional approach using Doubly Linked List and Hash Map.
+    NOTE: This approach is not recommended, took you almost 1 hour to implement it correctly, stick to the OrderedDict approach.
+    '''
+
+    def __init__(self, capacity: int):
+        self.capacity = capacity
+        self.cache = {}
+
+        self.head = DoubleNode()
+        self.tail = DoubleNode()
+        self.head.right = self.tail
+        self.tail.left = self.head
+
+    def _remove(self, node):
+        node.left.right = node.right
+        node.right.left = node.left
+
+    def _add_to_head(self, node):
+        node.left = self.head
+        node.right = self.head.right
+        self.head.right.left = node
+        self.head.right = node
+
+    def get(self, key: int) -> int:
+        if key not in self.cache:
+            return -1
+
+        node = self.cache[key]
+        self._remove(node)
+        self._add_to_head(node)
+        return node.value
+
+    def put(self, key: int, value: int) -> None:
+        if key in self.cache:
+            node = self.cache[key]
+            node.value = value
+            self._remove(node)
+            self._add_to_head(node)
+            return
+
+        node = DoubleNode(key, value)
+        self.cache[key] = node
+        self._add_to_head(node)
+
+        if len(self.cache) > self.capacity:
+            lru = self.tail.left
+            self._remove(lru)
+            del self.cache[lru.key]
+
+
+# 23. Merge k Sorted Lists (https://leetcode.com/problems/merge-k-sorted-lists/description/) - Hard
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+from heapq import heappush, heappop
+class Solution:
+    '''
+    Time Complexity: O(n log k)
+    Space Complexity: O(k)
+
+    where, k is number of linked lists, and n is total number of nodes across all lists
+
+    NOTE:
+    When using heapq with custom classes/objects, use a tuple of the form to be stored:
+        (key, unique_id, object)
+
+    Reason:
+    - heapq does not support a custom comparator or key function.
+    - It compares tuple elements in order.
+    - First, it compares `key`.
+    - If keys are equal, it compares `unique_id`.
+    - Without a unique_id, Python would attempt to compare the objects
+    themselves, which raises a TypeError since class instances cannot be compared by default.
+    '''
+    def mergeKLists(self, lists: List[Optional[ListNode]]) -> Optional[ListNode]:
+        heap = []
+        dummy = ListNode(0)
+        node = dummy
+
+        lists = [head for head in lists if head]
+        counter = 0
+        for l in lists:
+            if l:
+                heappush(heap, (l.val, counter, l))
+                counter += 1
+
+        while heap:
+            val, _, node.next = heappop(heap)
+            node = node.next
+            if node.next:
+                heappush(heap, (node.next.val, counter, node.next))
+                counter += 1
+        
+        return dummy.next
+
+
+# 25. Reverse Nodes in k-Group (https://leetcode.com/problems/reverse-nodes-in-k-group/description/) - Hard
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(1)
+    where, n is the total number of nodes
+    NOTE: This is best possible solution in terms of time and space complexity,
+    But, since you used pointers, you took a lot of time to implement it, 
+    around 43 min (including the dry run for your understanding), 
+    good news is you've done it all by yourself, 
+    you could have implemented it much more quicker if you had used a stack/list approach,
+    implementing pointers for complex problems, especially when you have to dry run the code is time consuming
+    '''
+    def reverseKGroup(self, head: Optional[ListNode], k: int) -> Optional[ListNode]:
+        dummy = ListNode(0)
+        dummy.next = head
+        leftLimit, cur, old, rightLimit = dummy, head, dummy, dummy
+        while True:
+            for _ in range(k):
+                if rightLimit:
+                    rightLimit = rightLimit.next
+                else:
+                    break
+            
+            if not rightLimit:
+                break
+            
+            end = rightLimit
+            rightLimit = rightLimit.next
+
+            while old != end:
+                temp = cur.next
+                cur.next = old
+                old = cur
+                cur = temp
+            
+            start = leftLimit.next
+            leftLimit.next = end
+            start.next = rightLimit
+            
+            leftLimit, cur, old, rightLimit = start, rightLimit, start, start
+        
+        return dummy.next
+
+
+
+
+
+###### TREES ######
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+# 104. Maximum Depth of Binary Tree (https://leetcode.com/problems/maximum-depth-of-binary-tree/description/) - Easy
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    def maxDepth(self, root: Optional[TreeNode]) -> int:
+        return 1 + max(self.maxDepth(root.left), self.maxDepth(root.right)) if root else 0
+
+
+# 543. Diameter of Binary Tree (https://leetcode.com/problems/diameter-of-binary-tree/description/) - Easy
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    where, n is the number of nodes
+    Solved in 8 mins, all by yourself! Good job!
+    '''
+    def diameterOfBinaryTree(self, root: Optional[TreeNode]) -> int:
+        out = 0
+        def getMaxDepth(node):
+            nonlocal out
+            if not node:
+                return 0
+            left = getMaxDepth(node.left)
+            right = getMaxDepth(node.right)
+            out = max(out, left + right)
+            return 1 + max(left, right)
+        getMaxDepth(root)
+        return out
+
+
+# 110. Balanced Binary Tree (https://leetcode.com/problems/balanced-binary-tree/description/) - Easy
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    where, n is the number of nodes in given tree.
+    NOTE: You misunderstood the definition of a balanced tree as least possible height for a binary tree for given nodes, when it's actually,
+    for all nodes, the difference between depth of it's left subtree and right subtree is less than or equal to 1 level.
+    Eg: [1,2,3,4,5,6,null,8]
+    Took 8 min once, the definition was clarified, ask clarifying questions, don't assume!
+    '''
+    def isBalanced(self, root: Optional[TreeNode]) -> bool:
+        def check(node):
+            if not node:
+                return 0
+            left = check(node.left)
+            right = check(node.right)
+            if min(left, right) == -1 or abs(right-left) > 1:
+                return -1
+            return 1 + max(left, right)
+        return False if check(root) == -1 else True
+
+
+# 100. Same Tree (https://leetcode.com/problems/same-tree/description/) - Easy
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    def isSameTree(self, p: Optional[TreeNode], q: Optional[TreeNode]) -> bool:
+        if p == None and q == None:
+            return True
+        if p == None or q == None or p.val != q.val:
+            return False
+        return self.isSameTree(p.left, q.left) and self.isSameTree(p.right, q.right)
+
+# 572. Subtree of Another Tree (https://leetcode.com/problems/subtree-of-another-tree/description/) - Easy
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    def isSubtree(self, root: Optional[TreeNode], subRoot: Optional[TreeNode]) -> bool:
+        '''
+        Time Complexity: O(n * m)
+        Space Complexity: O(n + m)
+        Where, `n` is the number of nodes in `root` and `m` is the number of nodes in `subRoot`.
+        '''
+        if self.isSametree(root, subRoot):
+            return True
+        if root != None:
+            return self.isSubtree(root.left, subRoot) or self.isSubtree(root.right, subRoot)
+        return False
+
+    def isSametree(self,  root1: Optional[TreeNode], root2: Optional[TreeNode]) -> bool:
+        if root1 == None and root2 == None:
+            return True
+        if root1 == None or root2 == None or root1.val != root2.val:
+            return False
+        return self.isSametree(root1.left, root2.left) and self.isSametree(root1.right, root2.right)
+# 572. Subtree of Another Tree (https://leetcode.com/problems/subtree-of-another-tree/description/) - Easy - Duplicate
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    def isSubtree(self, root: Optional[TreeNode], subRoot: Optional[TreeNode]) -> bool:
+        return self.serialize(subRoot) in self.serialize(root)
+    
+    def serialize(self, node: Optional[TreeNode]) -> str:
+        if node == None: return "N"
+        return f"({node.val},{self.serialize(node.left)},{self.serialize(node.right)})"
+
+
+# 235. Lowest Common Ancestor of a Binary Search Tree (https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-search-tree/description/) - Medium
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.left = None
+#         self.right = None
+class Solution:
+    def lowestCommonAncestor(self, root: 'TreeNode', p: 'TreeNode', q: 'TreeNode') -> 'TreeNode':
+        '''
+        Time Complexity: O(h), where h is the height of the tree.
+        Space Complexity: O(1), since we are not using any extra space.
+        where, h is log(n) in a balanced tree, and n is the number of nodes in the tree.
+
+        This is a Binary Search Tree, so we can use the properties of BST to find the LCA.
+        In a BST, left child nodes are less than the parent node, and right child nodes are greater than the parent node.
+        Traditionally, nodes have unique values in a BST.
+        '''
+        if p.val < root.val and q.val < root.val:
+            return self.lowestCommonAncestor(root.left, p, q)
+        if p.val > root.val and q.val > root.val:
+            return self.lowestCommonAncestor(root.right, p, q)
+        return root
+
+
+# 236. Lowest Common Ancestor of a Binary Tree (https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-tree/description/) - Medium
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.left = None
+#         self.right = None
+class Solution:
+    def lowestCommonAncestor(self, root: 'TreeNode', p: 'TreeNode', q: 'TreeNode') -> 'TreeNode':
+        '''
+        Time Complexity: O(n), where n is the number of nodes in the tree.
+        Space Complexity: O(n), where n is the number of nodes in the tree.
+        This is not a Binary Search Tree, just a regular binary tree, so in worst case, we have to traverse all the nodes to find the LCA.
+        '''
+        self.searchedLeft = set()
+        self.searchedRight = set()
+        targets = [p, q]
+        path = self.search(root, targets, [root])
+        targets = [q] if path[-1] == p else [p]
+        for node in reversed(path):
+            if self.search(node, targets, [node]) != None:
+                return node
+        return root
+            
+    def search(self, node: 'TreeNode', targets: List['TreeNode'], path: List['TreeNode']) -> List['TreeNode']:
+        if node == None:
+            return None
+        path.append(node)
+        if node in targets:
+            return path
+        left = None
+        if node not in self.searchedLeft:
+            self.searchedLeft.add(node)
+            left = self.search(node.left, targets, path)
+        if left != None:
+            return left
+        if node in self.searchedRight:
+            return None
+        self.searchedRight.add(node)
+        return self.search(node.right, targets, path)
+
+
+# 102. Binary Tree Level Order Traversal (https://leetcode.com/problems/binary-tree-level-order-traversal/description/) - Medium
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    def levelOrder(self, root: Optional[TreeNode]) -> List[List[int]]:
+        levels = []
+        queue = [root]
+        while queue:
+            level = []
+            newQueue = []
+            for node in queue:
+                if node != None:
+                    level.append(node.val)
+                    newQueue.append(node.left)
+                    newQueue.append(node.right)
+            if level:
+                levels.append(level)
+            queue = newQueue
+        return levels
+
+
+# 199. Binary Tree Right Side View (https://leetcode.com/problems/binary-tree-right-side-view/description/) - Medium
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    where, n is the total number of nodes in Tree
+    Used BFS to do level order traversal
+    Solved in 9 mins, all by yourself! Good job! Amazing actually!
+    You first visualized the problem, thought of the algo and then coded it!
+    '''
+    def rightSideView(self, root: Optional[TreeNode]) -> List[int]:
+        q = deque()
+        if root:
+            q.append(root)
+        out = []
+        while q:
+            newq = deque()
+            last = None
+            while q:
+                last = q.popleft()
+                if last.left:
+                    newq.append(last.left)
+                if last.right:
+                    newq.append(last.right)
+            out.append(last.val)
+            q = newq
+        return out
+
+
+# 1448. Count Good Nodes in Binary Tree (https://leetcode.com/problems/count-good-nodes-in-binary-tree/description/) - Medium
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    '''
+    Time complexity: O(n)
+    Space complexity: O(h)
+    where, n is the total number of nodes, and h is the height of the tree (can be n if it's a skewed tree in worst cases)
+    Solved in 6 mins, all by yourself! Good job! Incredible actually!
+    '''
+    def goodNodes(self, root: TreeNode) -> int:
+
+        def dfs(node, pathMax):
+            if not node:
+                return 0
+            val = 0
+            if node.val >= pathMax:
+                pathMax = node.val
+                val += 1
+            return val + dfs(node.left, pathMax) + dfs(node.right, pathMax)
+        
+        return dfs(root, root.val)
+
+
+# 98. Validate Binary Search Tree (https://leetcode.com/problems/validate-binary-search-tree/description/) - Medium
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    def isValidBST(self, root: Optional[TreeNode]) -> bool:
+        '''
+        Time Complexity: O(n), where n is the number of nodes in the tree.
+        We would check each node exactly once, so time complexity is O(n).
+        '''
+        return self.isValidChild(root, float('-inf'), float('inf'))
+    def isValidChild(self, root: Optional[TreeNode], minNeeded: int, maxAllowed: int) -> bool:
+        if root == None:
+            return True
+        if root.val <= minNeeded or root.val >= maxAllowed:
+            return False
+        return self.isValidChild(root.left, minNeeded, root.val) and self.isValidChild(root.right, root.val, maxAllowed)
+
+
+# 230. Kth Smallest Element in a BST (https://leetcode.com/problems/kth-smallest-element-in-a-bst/description/) - Medium
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    def kthSmallest(self, root: Optional[TreeNode], k: int) -> int:
+        '''
+        Time Complexity: O(n)
+        Space Complexity: O(n)
+        More precise time complexity is O(h+k), where h is height of the BST and k is given k value. Worst case h = n and k = n => O(2n) => O(n)
+        1. Keep moving left until you hit none when you hit none, the previous value in the stack is the value of smallest value
+        2. To find the next smallest value, go one branch to the right, and keep moving left. If the right node is none go back to parent using the stack, repeat
+        '''
+        node = root
+        stack = [] 
+        while k > 0:
+            while node.left != None:
+                stack.append(node)
+                node = node.left
+            k-=1
+            if k==0:
+                return node.val
+            if node.right:
+                node = node.right
+            else:
+                node = stack.pop(-1)
+                node.left = None
+        return node.val
+
+
+# 105. Construct Binary Tree from Preorder and Inorder Traversal (https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/description/) - Medium
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    def buildTree(self, preorder: List[int], inorder: List[int]) -> Optional[TreeNode]:
+        '''
+        Time Complexity: O(n^2)
+        Space Complexity: O(n^2). where, n is number of nodes
+        This is a sub par solution, but is easy to think of and implement. Better solution has a time complexity of O(n).
+        '''
+        n = len(preorder)
+        index = {num: i for i, num in enumerate(inorder)}
+
+        def subTree(preStart: int, preEnd: int, inStart: int, inEnd: int) -> Optional[TreeNode]:
+            if preStart == preEnd:
+                return None
+            root = TreeNode(preorder[preStart])
+            treeLen = index[root.val] + 1 - inStart
+            root.left = subTree(preStart + 1, preStart + treeLen, inStart, inStart + treeLen - 1)
+            root.right = subTree(preStart + treeLen, preEnd, inStart + treeLen, inEnd)
+            return root
+        
+        return subTree(0, n, 0, n)
+
+# 105. Construct Binary Tree from Preorder and Inorder Traversal (https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/description/) - Medium
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    def buildTree(self, preorder: List[int], inorder: List[int]) -> Optional[TreeNode]:
+        '''
+        Time Complexity: O(n^2)
+        Space Complexity: O(n^2). where, n is number of nodes, stack trace and list slicing are causes.
+        This is a sub par solution, but is easy to think of and implement. Better solution has a time and space complexities of O(n).
+        '''
+        if not preorder:
+            return None
+        root = TreeNode(preorder[0])
+        leftLimit = inorder.index(root.val)+1
+        root.left = self.buildTree(preorder[1:leftLimit], inorder[:leftLimit-1])
+        root.right = self.buildTree(preorder[leftLimit:], inorder[leftLimit:])
+        return root
+
+# 105. Construct Binary Tree from Preorder and Inorder Traversal (https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/description/) - Medium
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    def buildTree(self, preorder: List[int], inorder: List[int]) -> Optional[TreeNode]:
+        '''
+        Time Complexity: O(n^2)
+        Space Complexity: O(n). where, n is number of nodes, this is because of stacktrace, we eliminated list slicing in this approach.
+        This is a sub par solution, better than slicing lists though. Better solution has a time and space complexities of O(n).
+        '''
+        n = len(preorder)
+        def subTree(preStart: int, preEnd: int, inStart: int, inEnd: int) -> Optional[TreeNode]:
+            if preStart == preEnd:
+                return None
+            root = TreeNode(preorder[preStart])
+            treeLen = inorder.index(root.val, inStart, inEnd) + 1 - inStart
+            root.left = subTree(preStart + 1, preStart + treeLen, inStart, inStart + treeLen - 1)
+            root.right = subTree(preStart + treeLen, preEnd, inStart + treeLen, inEnd)
+            return root
+        return subTree(0, n, 0, n)
+
+# 105. Construct Binary Tree from Preorder and Inorder Traversal (https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/description/) - Medium
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    def buildTree(self, preorder: List[int], inorder: List[int]) -> Optional[TreeNode]:
+        '''
+        Time Complexity: O(n)
+        Space Complexity: O(n). where, n is number of nodes, because of stacktrace.
+        This is an optimal solution, but there is even better optimized solution with same time and space complexities.
+        This is good for interview purposes. Refer https://neetcode.io/solutions/construct-binary-tree-from-preorder-and-inorder-traversal
+        '''
+        n = len(preorder)
+        index = {num: i for i, num in enumerate(inorder)}
+        def subTree(preStart: int, preEnd: int, inStart: int, inEnd: int) -> Optional[TreeNode]:
+            if preStart == preEnd:
+                return None
+            root = TreeNode(preorder[preStart])
+            treeLen = index[root.val] + 1 - inStart
+            root.left = subTree(preStart + 1, preStart + treeLen, inStart, inStart + treeLen - 1)
+            root.right = subTree(preStart + treeLen, preEnd, inStart + treeLen, inEnd)
+            return root
+        return subTree(0, n, 0, n)
+
+
+# 124. Binary Tree Maximum Path Sum (https://leetcode.com/problems/binary-tree-maximum-path-sum/description/) - Hard
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    def maxPathSum(self, root: Optional[TreeNode]) -> int:
+        self.maxVal = float('-inf')
+        self.nodeMax(root)
+        return self.maxVal
+    def nodeMax(self, node) -> int:
+        if node == None:
+            return float('-inf')
+        left = self.nodeMax(node.left)
+        right = self.nodeMax(node.right)
+        nodeMax = max(node.val + left, node.val + right, node.val)
+        self.maxVal = max(self.maxVal, nodeMax, node.val + left + right)
+        return nodeMax
+
+
+# 297. Serialize and Deserialize Binary Tree (https://leetcode.com/problems/serialize-and-deserialize-binary-tree/description/) - Hard
+# Definition for a binary tree node.
+# class TreeNode(object):
+#     def __init__(self, x):
+#         self.val = x
+#         self.left = None
+#         self.right = None
+class Codec:
+    def serialize(self, root):
+        """Encodes a tree to a single string.
+        
+        :type root: TreeNode
+        :rtype: str
+        """
+        from json import dumps
+        return dumps(self.getPreorder(root))
+
+    def getPreorder(self, root):
+        if root == None:
+            return None
+        return [root.val,self.getPreorder(root.left),self.getPreorder(root.right)]
+
+    def createTree(self, array):
+        if array == None:
+            return None
+        root = TreeNode(array[0])
+        root.left = self.createTree(array[1])
+        root.right = self.createTree(array[2])
+        return root
+
+    def deserialize(self, data):
+        """Decodes your encoded data to tree.
+        
+        :type data: str
+        :rtype: TreeNode
+        """
+        from json import loads
+        return self.createTree(loads(data))
+
+# Your Codec object will be instantiated and called as such:
+# ser = Codec()
+# deser = Codec()
+# ans = deser.deserialize(ser.serialize(root))
+
+
+
+###### HEAP / PRIORITY QUEUE   ######
+
+# 703. Kth Largest Element in a Stream (https://leetcode.com/problems/kth-largest-element-in-a-stream/description/) - Easy
+from heapq import heapify, heappush, heappop, heappushpop
+class KthLargest:
+
+    def __init__(self, k: int, nums: List[int]):
+        heapify(nums)
+        while len(nums) > k:
+            heappop(nums)
+        self.h = nums
+        self.k = k
+
+    def add(self, val: int) -> int:
+        if len(self.h) < self.k:
+            heappush(self.h, val)
+            return self.h[0]
+        heappushpop(self.h, val)    
+        return self.h[0]
+
+# Your KthLargest object will be instantiated and called as such:
+# obj = KthLargest(k, nums)
+# param_1 = obj.add(val)
+
+
+# 295. Find Median from Data Stream (https://leetcode.com/problems/find-median-from-data-stream/description/) - Hard
+import heapq
+class MedianFinder:
+
+    def __init__(self):
+        self.left = []
+        self.right = []
+
+    def addNum(self, num: int) -> None:
+        if self.left == [] or num <= -self.left[0]:
+            heapq.heappush(self.left, -num)
+        else:
+            heapq.heappush(self.right, num)
+
+        if len(self.left) > len(self.right) + 1:
+            heapq.heappush(self.right, -heapq.heappop(self.left))
+        if len(self.right) > len(self.left):
+            heapq.heappush(self.left, -heapq.heappop(self.right))
+
+    def findMedian(self) -> float:
+        if len(self.left) == len(self.right):
+            return (-self.left[0] + self.right[0]) / 2.0
+        return -self.left[0]
+
+# Example usage:
+# obj = MedianFinder()
+# obj.addNum(num)
+# param_2 = obj.findMedian()
+
+
+
+
+###### TRIES ######
+
+# 212. Word Search II (https://leetcode.com/problems/word-search-ii/description/) - Hard
+class Trie:
+    def __init__(self):
+        self.children = {}
+        self.isWord = False
+
+    def add(self, word: str):
+        cur = self
+        for i, ch in enumerate(word):
+            if ch not in cur.children: cur.children[ch] = Trie()
+            cur = cur.children[ch]
+        cur.isWord = True
+
+    def remove(self, word: str):
+        cur = self
+        nodes = []
+        for i, ch in enumerate(word):
+            if ch not in cur.children: return
+            nodes.append(cur)
+            cur = cur.children[ch]
+        cur.isWord = False
+        i = -1
+        while nodes:
+            parent = nodes.pop()
+            if len(cur.children) > 0 or cur.isWord: return
+            parent.children.pop(word[i])
+            cur = parent
+            i -= 1
+
+class Solution:
+    def findWords(self, board: List[List[str]], words: List[str]) -> List[str]:
+        found = set()
+        
+        trie = Trie()
+        for word in words: trie.add(word)
+
+        row, col = len(board), len(board[0])
+        
+        visited = set()
+        def search(r, c, parent, visited, word):
+            if (r < 0 or c < 0 or r >= row or c >= col or (r,c) in visited or board[r][c] not in parent.children): return
+
+            word += board[r][c]
+
+            parent = parent.children[board[r][c]]
+            if parent.isWord:
+                found.add(word)
+                trie.remove(word)
+
+            visited.add((r,c))
+
+            search(r+1, c, parent, visited, word)
+            search(r, c+1, parent, visited, word)
+            search(r-1, c, parent, visited, word)
+            search(r, c-1, parent, visited, word)
+            
+            visited.remove((r, c))
+
+        for r in range(row):
+            for c in range(col):
+                search(r, c, trie, visited, "")
+
+        return list(found)
+
+# 212. Word Search II (https://leetcode.com/problems/word-search-ii/description/) - Hard
+class PrefixTree:
+    '''
+    Same thing not much difference, just added same pruning, didn't make much difference, Over engineered!
+    '''
+    def __init__(self) -> None:
+        self.children = {}
+        self.isWord = None
+    
+    def add(self, word: str) -> None:
+        root = self
+        for ch in word:
+            if ch not in root.children:
+                root.children[ch] = PrefixTree()
+            root = root.children[ch]
+        root.isWord = word
+
+    def remove(self, word: str) -> str:
+        if not word: # Not needed
+            return None
+        root = self
+        deleteLink = (root, word[0])
+        for ch in word:
+            if len(root.children) > 1 or root.isWord:
+                deleteLink = (root, ch)
+            if ch not in root.children:
+                return None
+            root = root.children[ch]
+        if not root.children:
+            deleteLink[0].children.pop(deleteLink[1])
+        root.isWord = None
+        return word
+    
+    def __str__(self) -> str:
+        return f'Node:(children={self.children.keys()}, isWord={self.isWord})'
+
+class Solution:
+    def findWords(self, board: List[List[str]], words: List[str]) -> List[str]:
+        # Prune words
+        words = set(words)
+        boardCounter = sum((Counter(row) for row in board),Counter())
+        self.allWords = dict()
+        while words:
+            word = words.pop()
+            if len(word) > len(board)*len(board[0]):
+                continue
+            wordCounter = Counter(word)
+            for ch in wordCounter:
+                if wordCounter[ch] > boardCounter[ch]:
+                    continue
+
+            # Optimize branching (doesn't contribute much), ideal would be to see if there's any algo for word commanlity, reduce number of prefix branches..
+            reverseWord = word[::-1]
+            key = word
+            if boardCounter[word[0]] > boardCounter[word[-1]]:
+                key = reverseWord
+            
+            # Reduce Prefix tree branches by reducing number of words to search
+            if reverseWord in words:
+                words.remove(reverseWord)
+                self.allWords[key] = [word, reverseWord]
+            else:
+                self.allWords[key] = [word]
+
+        self.visited = set()
+        for r in range(len(board)):
+            self.visited.update([(r,-1), (r,len(board[0]))])
+        for c in range(len(board[0])):
+            self.visited.update([(-1,c), (len(board),c)])
+        
+        self.prefixTree = PrefixTree()
+        for word in self.allWords:
+            self.prefixTree.add(word)
+
+        self.board = board
+        self.output = []
+        for r in range(len(board)):
+            for c in range(len(board[0])):
+                self.search(r,c,self.prefixTree)
+        return self.output
+
+    def search(self, r: int, c: int, node: PrefixTree) -> None:
+        if not node: # Not needed
+            return
+        
+        if node.isWord:
+            self.output.extend(self.allWords.pop(node.isWord, []))
+            self.prefixTree.remove(node.isWord)
+        
+        if (r,c) in self.visited or self.board[r][c] not in node.children:
+            return
+        
+        node = node.children[self.board[r][c]]
+        self.visited.add((r,c))
+        self.search(r-1, c, node)
+        self.search(r+1, c, node)
+        self.search(r, c-1, node)
+        self.search(r, c+1, node)
+        self.visited.remove((r,c))
+        return
+
+
+
+###### GRAPHS ######
+
+# 695. Max Area of Island (https://leetcode.com/problems/max-area-of-island/description/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(m * n)
+    Space Complexity: O(m * n)
+    where, m is number of rows, and n is number of columns
+    Solved in 10 mins, all by yourself! Good job!
+    '''
+    def maxAreaOfIsland(self, grid: List[List[int]]) -> int:
+        maxArea = 0
+        def dfs(i,j):
+            if i < 0 or i >= len(grid) or j < 0 or j >= len(grid[0]) or grid[i][j] == 0:
+                return 0
+            
+            grid[i][j] = 0
+
+            # val = 1 + dfs(i+1,j) + dfs(i-1,j) + dfs(i,j+1) + dfs(i,j-1) # What you wrote originally, vs negligible optimization
+            # nonlocal maxArea
+            # maxArea = max(maxArea, val)
+            return 1 + dfs(i+1,j) + dfs(i-1,j) + dfs(i,j+1) + dfs(i,j-1) # return val
+        
+        for i in range(len(grid)):
+            for j in range(len(grid[0])):
+                maxArea = max(maxArea, dfs(i,j)) # dfs(i,j)
+        
+        return maxArea
+
+
+# 994. Rotting Oranges (https://leetcode.com/problems/rotting-oranges/description/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(m * n)
+    Space Complexity: O(m * n)
+    where, m is number of rows in grid, and n is number of columns in grid
+    Note: Only possible to solve this using BFS, since time needs to be calculated,
+    Took you 27 mins to write the code, you were fumbling because you didn't implement BFS a lot before, 
+    usually you always pick dfs, and you tried to do that here too, but this is only possible with BFS!
+    '''
+    def orangesRotting(self, grid: List[List[int]]) -> int:
+        time = -1
+        rotten = set()
+        newRotten = set()
+        oranges = 0
+        m, n = len(grid), len(grid[0])
+
+        for i in range(m):
+            for j in range(n):
+                if grid[i][j] == 1:
+                    oranges += 1
+                elif grid[i][j] == 2:
+                    rotten.add((i,j))
+        
+        def getNext(i,j):
+            if 0 <= i < m and 0 <= j < n and grid[i][j] == 1:
+                nonlocal newRotten, oranges
+                newRotten.add((i,j))
+                oranges -= 1
+                grid[i][j] = 2
+
+        while rotten:
+            newRotten = set()
+            for i,j in rotten:
+                for (a,b) in [(i+1,j),(i-1,j),(i,j+1),(i,j-1)]:
+                    getNext(a,b)
+            rotten = newRotten
+            time += 1
+
+        return -1 if oranges != 0 else max(0,time)
+
+
+# 417. Pacific Atlantic Water Flow (https://leetcode.com/problems/pacific-atlantic-water-flow/description/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(R * C)
+    Space Complexity: O(R * C)
+    Where, R is number of rows, C is number of columns in heights.
+
+    Note:
+    Optimal Solution:
+    The best approach is to do DFS of ocean border cells only, and find cells that can reach that ocean.
+    Basically solving in reverse, going from ocean to their respective reachable cells, and find cells common in both oceans.
+
+    My Mistakes:
+    Instead for some reason, when you're trying to code it, you're some how coding the brute force approach, 
+    where you're doing DFS for every cell, to see if it can reach both oceans with memoization.
+    This approach is way more complex to code, and has worse time and space complexities of O((R * C)^2).
+    REMEMBER TO PERFORM DFS FOR OCEAN BORDER CELLS ONLY!!! Not for every cell, 
+    and you don't need a visited set, you're already using pacific and atlantic sets 
+    that act as visited sets for respective oceans.
+    '''
+    def pacificAtlantic(self, heights: List[List[int]]) -> List[List[int]]:
+        R = len(heights)
+        C = len(heights[0])
+
+        pacific = set()
+        atlantic = set()
+
+        def dfs(r,c,ocean,prevH):
+            if not ( 0 <= r < R and 0 <= c < C ) or heights[r][c] < prevH:
+                return False
+            if (r,c) in ocean:
+                return True
+            
+            ocean.add((r,c)) # This prevents revisiting the same cell
+            dfs(r+1,c,ocean,heights[r][c]) 
+            dfs(r-1,c,ocean,heights[r][c]) 
+            dfs(r,c+1,ocean,heights[r][c]) 
+            dfs(r,c-1,ocean,heights[r][c])
+            return True
+    
+        # Only doing DFS for ocean border cells, NOT FOR EVERY CELL!!!
+        for c in range(C):
+            dfs(0,c,pacific,heights[0][c])
+            dfs(R-1,c,atlantic,heights[R-1][c])
+        
+        for r in range(R):
+            dfs(r,0,pacific,heights[r][0])
+            dfs(r,C-1,atlantic,heights[r][C-1])
+
+        return list(pacific & atlantic)
+
+
+# 207. Course Schedule  (https://leetcode.com/problems/course-schedule/description/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(V + E)
+    Space Complexity: O(V + E)
+    Where, V is number of courses, E is number of prerequisites. 
+    We're only doing dfs for each course once, and checking each prerequisite link once, because we're using memoization.
+    '''
+    def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:
+        courseDependencies = dict()
+        possibleCourses = set()
+
+        for course, dependency in prerequisites:
+            courseDependencies.setdefault(course, set()).add(dependency)
+            courseDependencies.setdefault(dependency, set())
+        
+        visited = set()
+
+        def isCoursePossible(course):
+            if course in visited:
+                return False
+            if course in possibleCourses:
+                return True
+
+            visited.add(course)
+            
+            for dependency in courseDependencies[course]:
+                if not isCoursePossible(dependency):
+                    return False
+            
+            visited.discard(course)
+            possibleCourses.add(course)
+            return True
+
+        for course in courseDependencies:
+            if not isCoursePossible(course):
+                return False
+        
+        return True
+
+
+# 261. Graph Valid Tree (https://leetcode.com/problems/graph-valid-tree/description/) - Medium - Premium (https://neetcode.io/problems/valid-tree/question)
+class Solution:
+    '''
+    Time Complexity: O(V + E)
+    Space Complexity: O(V + E)
+    Where, V is number of nodes, E is number of edges. 
+    We're only doing dfs for each node once, and checking each edge once, because we're using visited set.
+    1. A valid tree should have exactly n-1 edges, if there are more edges, there must be a cycle.
+    2. A valid tree should be fully connected, meaning all nodes should be reachable from any node. We can check this by doing a DFS/BFS from any node and see if we can visit all nodes.
+    3. During DFS/BFS, if we encounter a visited node that is not the parent of the current node, then there is a cycle.
+    4. Finally, after DFS/BFS, if the number of visited nodes is not equal to n, then the graph is not fully connected.
+    '''
+    def validTree(self, n: int, edges: List[List[int]]) -> bool:
+        if len(edges) > (n - 1):
+            return False
+
+        hmap = dict()
+
+        for n1, n2 in edges:
+            hmap.setdefault(n1, set()).add(n2)
+            hmap.setdefault(n2, set()).add(n1)
+        
+        visited = set()
+
+        def dfs(n1, prev):
+            if n1 in visited:
+                return False
+            visited.add(n1)
+            for x in hmap.get(n1, set()): # Provide a default set is necessary cause if there is only 1 node, it won't have edges, it wouldn't have been saved in `hmap`
+                if x != prev and not dfs(x, n1):
+                    return False            
+            return True
+
+        return dfs(0,-1) and len(visited) == n
+
+
+# 323. Number of Connected Components in an Undirected Graph (https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/description/) - Medium - Premium (https://neetcode.io/problems/count-connected-components/question)
+class Solution:
+    '''
+    Time Complexity: O(V + E)
+    Space Complexity: O(V + E)
+    Where, V is number of nodes, E is number of edges.
+    We're only doing dfs for each node once, and checking each edge once, because we're using visited set.
+
+    There is a more efficient solution using union-find, whose time complexity is also O(V + E),
+    but this solution is easier to understand and implement.
+    '''
+    def countComponents(self, n: int, edges: List[List[int]]) -> int:
+        hmap = dict()
+        visited = set()
+        count = 0
+
+        for n1, n2 in edges:
+            hmap.setdefault(n1, set()).add(n2)
+            hmap.setdefault(n2, set()).add(n1)
+
+        def dfs(x):
+            if x in visited:
+                return
+            visited.add(x)
+            for k in hmap.get(x, set()):
+                dfs(k)
+            return
+
+        for x in range(n):
+            if x not in visited:
+                dfs(x)
+                count+=1
+        
+        return count
+
+
+
+###### ADVANCED GRAPHS ######
+
+# 269. Alien Dictionary (https://leetcode.com/problems/alien-dictionary/description/) - Hard - Premium (https://neetcode.io/problems/foreign-dictionary/question)
+class Solution:
+    '''
+    Time complexity: O(N+V+E)
+    Space complexity: O(V+E)
+
+    Where V is the number of unique characters, E is the number of edges, 
+    and N is the total number of characters in all the words.
+
+    This is a hard problem, we used topological sort to solve this problem with DFS,
+    can also be solved with BFS using Kahn's algorithm (another Topological sort).
+    We used a graph to represent the characters and their order, (we used an adjacency list for this),
+    and we used topological sort to find the order of characters.
+    1. We first create a graph where each character points to the characters that come after it.
+    2. We then do a topological sort on the graph, and if we encounter a cycle, 
+       we return an empty string. 
+       (Cycles mean, there is no valid order for characters, 
+       For Eg: We already have A < B, B < C, and if we get C < A which is not possible)
+    3. If we don't encounter a cycle, we return the order of characters.
+    4. When we are doing topological sort, we process the characters in reverse order, 
+       basically we process all the children, and when it's a leaf node (no children for this node) process it, 
+       and backtrack to the parent nodes, that's why the output we append ends up coming in reverse order, 
+       which we reverse in the end.
+    '''
+    def foreignDictionary(self, words: List[str]) -> str:
+        hmap = {}
+        
+        for w in words:
+            for c in w:
+                hmap[c] = set()
+        
+        for i in range(len(words)-1):
+            w1, w2 = words[i], words[i+1]
+            l = min(len(w1), len(w2))
+            if w1[:l] == w2[:l] and len(w1) > len(w2):
+                return ""
+            for j in range(l):
+                if w1[j] != w2[j]:
+                    hmap[w1[j]].add(w2[j])
+                    break # Breaking here is crucial, 
+                          # Eg: ABCZY < ABDE, here C < D and if you won't break here, 
+                          # you'll end up adding Z < E which is not true!
+        
+        visiting = set()
+        processed = set()
+
+        output = []
+
+        def dfs(c):
+            if c in visiting:
+                return False
+            if c in processed:
+                return True
+            
+            visiting.add(c)
+
+            for k in hmap[c]:
+                if not dfs(k):
+                    return False
+
+            visiting.discard(c)
+            output.append(c)
+            processed.add(c)
+            return True
+
+        for c in hmap:
+            if not dfs(c):
+                return ""
+
+        return "".join(reversed(output))
+
+
+
+###### 1-D DYNAMIC PROGRAMMING ######
+
+# 70. Climbing Stairs (https://leetcode.com/problems/climbing-stairs/description/) - Easy
+class Solution:
+    def climbStairs(self, n: int) -> int:
+        '''
+        Time Complexity: O(n)
+        Space Complexity: O(n)
+        Where, n is number of stairs.
+        Constrains specified as 1 <= n <= 45.
+
+        You were going with `1 + dfs(n-1) + dfs(n-2)` to compensate for n=0 case, 
+        but that causes over-counting, if you look at constrains, n >= 1, 
+        so you can go with right logic `dfs(n-1) + dfs(n-2)` and `if n==0 return 1`, 
+        you don't need to do `+1`, and be sure you return 1 for `n == 0` cases.
+        '''
+        cache = {}
+        def dfs(n):
+            if n < 2:
+                return 1
+            if n in cache:
+                return cache[n]
+            res = dfs(n-1) + dfs(n-2)
+            cache[n] = res
+            return res
+        return dfs(n)
+
+
+# 198. House Robber (https://leetcode.com/problems/house-robber/description/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    Where, n is number of houses.
+
+    Simple DFS with memoization problem. But the most optimal solution is below, 
+    has O(1) space complexity.
+    '''
+    def rob(self, nums: List[int]) -> int:
+        cache = {}
+
+        def dfs(i):
+            if i in cache:
+                return cache[i]
+            if i >= len(nums):
+                return 0
+            res = max(nums[i] + dfs(i+2), dfs(i+1))
+            cache[i] = res
+            return res
+        
+        return dfs(0)
+
+# 198. House Robber (https://leetcode.com/problems/house-robber/description/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(1)
+    Where, n is number of houses.
+    This is the most optimal solution with O(1) space complexity.
+    '''
+    def rob(self, nums: List[int]) -> int:
+        rob1, rob2 = 0, 0
+
+        for house in nums:
+            temp = rob2
+            rob2 = max(house + rob1, rob2)
+            rob1 = temp
+
+        return rob2
+
+
+# 213. House Robber II (https://leetcode.com/problems/house-robber-ii/description/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    Where, n is number of houses.
+    Most optimal solution has space complexity of O(1), similar to House Robber I problem.
+    Since the houses are in a circle, we can't rob the first and last house together.
+    '''
+    def rob(self, nums: List[int]) -> int:
+        if len(nums) == 1:
+            return nums[0]
+        
+        cache = {}
+        def dfs(i, leaveLast):
+            if (i,leaveLast) in cache:
+                return cache[(i,leaveLast)]
+            if (leaveLast and i >= len(nums) - 1) or i >= len(nums):
+                return 0
+            res = max(nums[i] + dfs(i+2, leaveLast), dfs(i+1, leaveLast))
+            cache[(i,leaveLast)] = res
+            return res
+            
+        return max(dfs(0, True), dfs(1, False))
+
+# 213. House Robber II (https://leetcode.com/problems/house-robber-ii/description/) - Medium - Duplicate
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(1)
+    Where, n is number of houses.
+    This is the most optimal solution, has space complexity of O(1), similar to House Robber I problem.
+    Since the houses are in a circle, we can't rob the first and last house together.
+    '''
+    def rob(self, nums: List[int]) -> int:
+        def helper(houses):
+            rob1, rob2 = 0, 0
+            for house in houses:
+                newRob = max(rob1 + house, rob2)
+                rob1 = rob2
+                rob2 = newRob
+            return rob2
+        return max(nums[0], helper(nums[1:]), helper(nums[:-1]))
+
+
+# 5. Longest Palindromic Substring (https://leetcode.com/problems/longest-palindromic-substring/description/) - Medium
+class Solution:
+    def longestPalindrome(self, s: str) -> str:
+        '''
+        Time Complexity: O(n^2)
+        Space Complexity: O(1)
+        Where, n is the length of the given string.
+        
+        NOTE: This is not the most optimal solution, we used Two pointers approach which is good enough for interview purposes.
+        Can also be done with Dynamic Programming with O(n^2) time and space complexity.
+        Most optimal solution is Manacher's Algorithm with time complexity of O(n) and space complexity of O(n).
+        Refer https://neetcode.io/problems/longest-palindromic-substring/solution for most optimal solution.
+        '''
+        left, right = 0, 0
+        maxLeft, maxRight = 0, 0
+
+        def updateMax():
+            nonlocal left, right, maxLeft, maxRight
+            while left >= 0 and right < len(s) and s[left] == s[right]:
+                left-=1
+                right+=1
+            left+=1
+            right-=1
+            if right-left > maxRight-maxLeft:
+                maxLeft = left
+                maxRight = right
+
+        for i in range(len(s)-1):
+            left = i
+            right = i
+            updateMax()    
+            left = i
+            right = i+1
+            updateMax()
+        
+        return s[maxLeft:maxRight+1]
+
+
+# 647. Palindromic Substrings (https://leetcode.com/problems/palindromic-substrings/description/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(n^2)
+    Space Complexity: O(1)
+    Where, n is the length of the given string.
+    NOTE: This is not the most optimal solution, we used Two pointers approach which is good enough for interview purposes.
+    Can also be done with Dynamic Programming with O(n^2) time and space complexity.
+    Most optimal solution is Manacher's Algorithm with time complexity of O(n) and space complexity of O(n).
+    Refer https://neetcode.io/problems/palindromic-substrings/solution for most optimal solution.
+    '''
+    def countSubstrings(self, s: str) -> int:
+        left, right = 0, 0
+        count = 0
+
+        def countPalindromes():
+            nonlocal left, right, count
+            while left >= 0 and right < len(s) and s[left] == s[right]:
+                left -= 1
+                right += 1
+                count += 1
+
+        for i in range(len(s)-1):
+            left = i
+            right = i
+            countPalindromes()
+            left = i
+            right = i+1
+            countPalindromes()
+
+        return count+1
+
+
+# 91. Decode Ways (https://leetcode.com/problems/decode-ways/description/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    Where, n is the length of the given string.
+    Simple DFS with memoization problem.
+    '''
+    def numDecodings(self, s: str) -> int:
+        # cache = {}
+
+        @cache # Using inbuilt cache decorator, code to import: `from functools import cache`
+        def dfs(i):
+            # if i in cache:
+            #     return cache[i]
+            if i >= len(s):
+                return 1
+            res = 0
+            if s[i] != '0':
+                res += dfs(i+1)
+            if i < len(s)-1 and (s[i] == '1' or (s[i] == '2' and s[i+1] in '0123456')):
+                res += dfs(i+2)
+            # cache[i] = res
+            return res    
+        
+        return dfs(0)
+
+
+# 322. Coin Change (https://leetcode.com/problems/coin-change/description/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(n * m)
+    Space Complexity: O(n)
+    Where, n is the amount, m is number of coins.
+    This is a Top-Down approach, a recursive solution with memoization.
+    This is more intuitive to think of than Bottom-Up approach.
+    '''
+    def coinChange(self, coins: List[int], amount: int) -> int:
+        cache = {0: 0}
+
+        def dfs(target):
+            if target in cache:
+                return cache[target]
+            if target < 0:
+                return -1
+
+            res = float('inf') # Can use `amount + 1` instead of `float('inf')` because max coins needed will be amount (all 1s) if "1" coin exists
+            for coin in coins:
+                tres = dfs(target-coin)
+                if tres > -1:
+                    res = min(res, tres+1)
+
+            if res == float('inf'): # Can use `amount + 1` instead of `float('inf')`
+                cache[target] = -1
+                return -1 
+            
+            cache[target] = res
+            return res
+
+        return dfs(amount)
+
+# 322. Coin Change (https://leetcode.com/problems/coin-change/description/) - Medium - Duplicate
+class Solution:
+    '''
+    Time Complexity: O(n * m)
+    Space Complexity: O(n)
+    Where, n is the amount, m is number of coins.
+    This is a Bottom-Up approach, an iterative solution with Dynamic Programming.
+    '''
+    def coinChange(self, coins: List[int], amount: int) -> int:
+        dp = [amount + 1] * (amount + 1)
+        dp[0] = 0
+        for a in range(1, amount + 1):
+            for c in coins:
+                if a - c >= 0:
+                    dp[a] = min(dp[a], 1 + dp[a - c])
+        return dp[amount] if dp[amount] != amount + 1 else -1
+
+
+# 152. Maximum Product Subarray (https://leetcode.com/problems/maximum-product-subarray/description/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    Where, n is number of elements in the given array.
+    Simple DFS with memoization problem, the most optimal solution has O(1) space complexity.
+    We need to keep track of both maximum and minimum products at each step, because a negative number can turn a minimum product into a maximum product.
+    '''
+    def maxProduct(self, nums: List[int]) -> int:
+        maxV = nums[-1] # Since at least one number exists, initializing with last number, if we initialize with first number, you'll need to handle edge case where last number is the maximum product. Eg: [-4,-1]. Instead of just returning 
+        
+        @cache
+        def dfs(i):
+            if i == len(nums)-1:
+                return nums[i], nums[i]
+            nonlocal maxV
+            pos, neg = dfs(i+1)
+            resPos = max(nums[i], nums[i] * pos, nums[i] * neg)
+            resNeg = min(nums[i], nums[i] * pos, nums[i] * neg)
+            maxV = max(resPos, maxV)
+            return resPos, resNeg
+
+        dfs(0)
+        return maxV
+
+# 152. Maximum Product Subarray (https://leetcode.com/problems/maximum-product-subarray/description/) - Medium - Duplicate
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(1)
+    Where, n is number of elements in the given array.
+    This is the most optimal solution with O(1) space complexity.
+    This is a Kadane's Algorithm variation.
+    Can also be done using Prefix and Suffix product approach.
+    Look in https://neetcode.io/problems/maximum-product-subarray/solution'''
+    def maxProduct(self, nums: List[int]) -> int:
+        res = nums[0]
+        curMin, curMax = 1, 1
+
+        for num in nums:
+            tmp = curMax * num
+            curMax = max(num * curMax, num * curMin, num)
+            curMin = min(tmp, num * curMin, num)
+            res = max(res, curMax)
+        return res
+
+
+# 139. Word Break (https://leetcode.com/problems/word-break/description/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(n * m * k)
+    Space Complexity: O(n)
+    Where, n is length of the string, m is number of words in the dictionary, k is average length of the words in the dictionary.'''
+    def wordBreak(self, s: str, wordDict: List[str]) -> bool:
+        
+        @cache # Using inbuilt cache decorator, code to import: `from functools import cache`
+        def dfs(i):
+            if i >= len(s):
+                return True
+            for word in wordDict:
+                if s[i:i+len(word)] == word and dfs(i+len(word)):
+                    return True
+            return False
+
+        return dfs(0)
+
+# 139. Word Break (https://leetcode.com/problems/word-break/description/) - Medium - Duplicate
+class Solution:
+    '''
+    Time Complexity: O(n * m * k)
+    Space Complexity: O(n + m)
+    Where, n is length of the string, m is number of words in the dictionary, k is average length of the words in the dictionary.
+    Small optimization (kind of insignificant) for larger wordDicts, by precomputing lengths of words in the dictionary.
+    '''
+    def wordBreak(self, s: str, wordDict: List[str]) -> bool:
+        wordDict = set(wordDict)
+        lengths = set([len(word) for word in wordDict])
+
+        @cache # Using inbuilt cache decorator, code to import: `from functools import cache`
+        def dfs(i):
+            if i >= len(s):
+                return True
+            for length in lengths:
+                if s[i:i+length] in wordDict and dfs(i+length):
+                    return True
+            return False
+
+        return dfs(0)
+
+
+# 300. Longest Increasing Subsequence (https://leetcode.com/problems/longest-increasing-subsequence/description/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(n^2)
+    Space Complexity: O(n)
+    Where, n is number of elements in the given array.
+    This is not the most optimal solution, but good enough for interview. Most optimal one has time complexity of O(n log n).
+    1. Keep a cache of longest increasing subsequence for each prev number.
+    2. For each number, we check list of all previous numbers, if the current number is greater than the previous number,
+       we can extend the increasing subsequence for it by 1.
+    3. We update the cache for the current number with the maximum length found.
+    4. Finally, we return the maximum length from the cache.
+    Eg: [10,2,5,3,7,18], when current number is 7, 
+       previous numbers in cache are {10:1, 2:1, 5:2, 3:2}, 
+       we can extend the sequence from either 2, 5 or 3, since they are all less than 7,
+       but the previous maximum subsequence length is 2 (from either 5 or 3), 
+       so we choose one of 5 or 3 and extend it to length 3, by considering 7 as the next number in the sequence.
+       We update the cache for 7 as 3, and also update the maximum length if needed.
+    '''
+    def lengthOfLIS(self, nums: List[int]) -> int:
+        cache = {}
+        maxLen = 1
+        for num in nums:
+            val = 1
+            for prev in cache:
+                if num > prev:
+                    val = max(val, 1 + cache[prev])
+            cache[num] = val
+            maxLen = max(maxLen, val)
+        return maxLen
+
+# 300. Longest Increasing Subsequence (https://leetcode.com/problems/longest-increasing-subsequence/description/) - Medium - Duplicate
+from bisect import bisect_left
+class Solution:
+    '''
+    Time Complexity: O(n log n)
+    Space Complexity: O(n)
+    Where, n is number of elements in the given array.
+    This is the most optimal solution using Binary Search. 
+    Watch this video for intuition: (https://youtu.be/on2hvxBXJH4)
+    NOTE: The dummyList is only for maintaining the length of the longest increasing subsequence found so far,
+    and not for storing the actual subsequence, in fact if you print the dummyList, it will not be the actual subsequence.
+    '''
+    def lengthOfLIS(self, nums: List[int]) -> int:
+        dummyList = []
+        for num in nums:
+            i = bisect_left(dummyList,num) # `from bisect import bisect_left`
+            if i == len(dummyList):
+                dummyList.append(num)
+            else:
+                dummyList[i] = num
+        return len(dummyList)
+
+
+
+###### 2-D DYNAMIC PROGRAMMING ######
+
+# 62. Unique Paths (https://leetcode.com/problems/unique-paths/description/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(m * n)
+    Space Complexity: O(m * n)
+    Where, m is number of rows, n is number of columns in the grid.
+    '''
+    def uniquePaths(self, m: int, n: int) -> int:
+        @cache
+        def dp(i,j):
+            if i >= m or j >= n:
+                return 0
+            if i == m-1 or j == n-1:
+                return 1
+            return dp(i+1,j) + dp(i,j+1)
+        return dp(0,0)
+
+
+# 1143. Longest Common Subsequence (https://leetcode.com/problems/longest-common-subsequence/description/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(m * n)
+    Space Complexity: O(m * n)
+    Where, m is length of text1, n is length of text2.
+    There is also a space optimized solution with O(min(m, n)) space complexity, 
+    but this is good enough for interview.
+    '''
+    def longestCommonSubsequence(self, text1: str, text2: str) -> int:
+        @cache
+        def dp(i, j):
+            if i >= len(text1) or j >= len(text2):
+                return 0
+            if text1[i] == text2[j]:
+                return 1 + dp(i+1,j+1)
+            else:
+                return max(dp(i, j+1), dp(i+1, j))
+        return dp(0,0)
+
+
+
+###### BACKTRACKING ######
+# 39. Combination Sum (https://leetcode.com/problems/combination-sum/description/) - Medium
+class Solution:
+    def combinationSum(self, candidates: List[int], target: int) -> List[List[int]]:
+        candidates.sort()
+        self.candidates = candidates
+        return self.getCombination(0, target, [])
+
+    def getCombination(self, i, need, stack):
+        if need == 0:
+            return [stack]
+        output = []
+        while i < len(self.candidates) and self.candidates[i] <= need:
+            output += self.getCombination(i, need - self.candidates[i], stack + [self.candidates[i]])
+            i += 1
+        return output
+
+
+# 79. Word Search (https://leetcode.com/problems/word-search/description/) - Medium
+class Solution:
+    def exist(self, board: List[List[str]], word: str) -> bool:
+        '''
+        Time Complexity: O(R * C * 4^L)
+        Space Complexity: O(L), for stack of visited cells
+        Where, R is number of rows, C is number of columns in board, and L is number of characters in word.
+        '''
+        self.board = board
+        self.word = word
+        self.visited = set()
+        for r in range(len(board)):
+            for c in range(len(board[0])):
+                if self.isWord(r, c, 0):
+                    return True
+        return False
+
+    def isWord(self, r: int, c: int, i: int) -> bool:
+        if i >= len(self.word):
+            return True
+        if (r < 0 or c < 0 or r >= len(self.board) or c >= len(self.board[0])
+            or (r,c) in self.visited or self.board[r][c] != self.word[i]):
+            return False
+        self.visited.add((r,c))
+        if (self.isWord(r+1,c,i+1) or self.isWord(r-1,c,i+1)
+            or self.isWord(r,c+1,i+1) or self.isWord(r,c-1,i+1)):
+            return True
+        self.visited.remove((r,c))
+
+# 79. Word Search (https://leetcode.com/problems/word-search/description/) - Medium
+class Solution:
+    def exist(self, board: List[List[str]], word: str) -> bool:
+        '''
+        Although the time and space complexities are not changed, this is a quicker solution in real world because of inexpensive preliminary pruning.
+        Time Complexity: O(R * C * 4^L)
+        Space Complexity: O(L), for stack of visited cells
+        Where, R is number of rows, C is number of columns in board, and L is number of characters in word.
+        '''
+        # There won't be a solution if length of the word is bigger than number of characters in board
+        if len(word) > len(board) * len(board[0]):
+            return False
+
+        # There won't be a solution if frequency for any of the character in a word, is more than the frequency of that character on board
+        wordCount = Counter(word)
+        boardCount = sum((Counter(row) for row in board), Counter())
+        for ch in wordCount:
+            if boardCount[ch] < wordCount[ch]:
+                return False
+
+        # We can reduce the amount of branching significantly by picking the tip of the word with least number of repeats on board
+        if boardCount[word[0]] > boardCount[word[-1]]:
+            word = word[::-1]
+
+        self.board = board
+        self.word = word
+        self.visited = set()
+        for r in range(len(board)):
+            for c in range(len(board[0])):
+                if self.isWord(r, c, 0):
+                    return True
+        return False
+
+    def isWord(self, r: int, c: int, i: int) -> bool:
+        if i >= len(self.word):
+            return True
+        if (r < 0 or c < 0 or r >= len(self.board) or c >= len(self.board[0])
+            or (r,c) in self.visited or self.board[r][c] != self.word[i]):
+            return False
+        self.visited.add((r,c))
+        if (self.isWord(r+1,c,i+1) or self.isWord(r-1,c,i+1)
+            or self.isWord(r,c+1,i+1) or self.isWord(r,c-1,i+1)):
+            return True
+        self.visited.remove((r,c))
+
+
+# 78. Subsets (https://leetcode.com/problems/subsets/description/) - Medium
+from copy import deepcopy
+class Solution:
+    '''
+    NOT THE  MOST EFFICIENT SOLUTION
+    '''
+    def subsets(self, nums: List[int]) -> List[List[int]]:
+        output = [[]]
+        for n in nums:
+            l = len(output)
+            output = output + deepcopy(output)
+            for i in range(l):
+                output[i].append(n)
+        return output
+
+
+
+###### GREEDY ######
+
+# 53. Maximum Subarray (https://leetcode.com/problems/maximum-subarray/description/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(1)
+    Where, n is number of elements in the given array.
+    This is Kadane's Algorithm, this is the most efficient solution for this problem.
+    '''
+    def maxSubArray(self, nums: List[int]) -> int:
+        maxSum = -100000
+        curSum = 0
+        for n in nums:
+            curSum += n
+            maxSum = max(maxSum, curSum)
+            if curSum < 0:
+                curSum = 0
+        return maxSum
+
+
+# 55. Jump Game (https://leetcode.com/problems/jump-game/description/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(n^2)
+    Space Complexity: O(1)
+    Where, n is number of elements in the given array.
+    This is not a the most efficient solution.
+    '''
+    def canJump(self, nums: List[int]) -> bool:
+        @cache
+        def dfs(i):
+            if i >= len(nums) - 1:
+                return True
+            for step in range(1, nums[i]+1):
+                if dfs(i+step):
+                    return True
+            return False
+        return dfs(0)
+    
+# 55. Jump Game (https://leetcode.com/problems/jump-game/description/) - Medium - Duplicate
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(1)
+    Where, n is number of elements in the given array.
+    This is the most efficient solution.
+    '''
+    def canJump(self, nums: List[int]) -> bool:
+        i = len(nums) - 1
+        possible = i
+        while i >= 0:
+            if i + nums[i] >= possible:
+                possible = i
+            i -= 1
+        return possible == 0
+
+
+
+###### INTERVALS ######
+
+class Interval(object):
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+# 251. Meeting Rooms (https://leetcode.com/problems/meeting-rooms/description/) - Easy - Premium (https://neetcode.io/problems/meeting-schedule/question)
+# Definition of Interval:
+# class Interval(object):
+#     def __init__(self, start, end):
+#         self.start = start
+#         self.end = end
+class Solution:
+    '''
+    Time Complexity: O(n log n)
+    Space Complexity: O(1)
+    where, n is the total number of intervals
+    Solved in 6 min, all by yourself! Good job!
+    '''
+    def canAttendMeetings(self, intervals: List[Interval]) -> bool:
+        intervals.sort(key=lambda x: x.start)
+        for i in range(len(intervals)-1):
+            if intervals[i].end > intervals[i+1].start:
+                return False
+        return True
+
+
+
+
+
+
+#########  EXTRA PROBLEMS  #########
+
+# 3365. Rearrange K Substrings to Form Target String (https://leetcode.com/problems/rearrange-k-substrings-to-form-target-string/description/) - Medium
+class Solution:
+    def isPossibleToRearrange(self, s: str, t: str, k: int) -> bool:
+        eqLen = len(s)//k
+        sCounter = defaultdict(int)
+        for i in range(0, len(s), eqLen):
+            sCounter[s[i:i+eqLen]] += 1
+            
+        for i in range(0, len(t), eqLen):
+            part = t[i:i+eqLen]
+            if sCounter[part] < 1:
+                return False
+            sCounter[part] -= 1
+        return True
+                
+
+# 3366. Minimum Array Sum (https://leetcode.com/problems/minimum-array-sum/description/) - Medium
+# NOT THE  MOST EFFICIENT SOLUTION
+class Solution:
+    def minArraySum(self, nums: List[int], k: int, op1: int, op2: int) -> int:
+        '''
+        Works flawlessly! This is Dynamic Programming approach, but Greedy algorithm is also possible, and is the best implementation (Implementing greedy algo is little hard, to figure out the corner case)!
+        Time Complexity: O(n * op1 * op2)
+        Space Complexity: O(n * op1 * op2)
+        '''
+        memo = dict()
+
+        def apply(i: int, op1: int, op2: int) -> int:
+            if i >= len(nums): return 0
+            if (i, op1, op2) in memo: return memo[(i, op1, op2)]
+
+            n = nums[i]
+            answer = n + apply(i+1, op1, op2)
+            if op1: answer = min(answer, (n+1)//2 + apply(i+1, op1-1, op2))
+            if op2 and n >= k: answer = min(answer, n-k + apply(i+1, op1, op2-1))
+            if op1 and op2:
+                if n >= k: answer = min(answer, (n-k+1)//2 + apply(i+1, op1-1, op2-1))
+                if n >= 2*k-1: answer = min(answer, (n+1)//2 - k + apply(i+1, op1-1, op2-1))
+            memo[(i, op1, op2)] = answer
+            return answer
+
+        return apply(0, op1, op2)
+
+
+# 460. LFU Cache (https://leetcode.com/problems/lfu-cache/description/) - Hard
+from collections import OrderedDict
+from heapq import heappush, heappop
+class LFUCache:
+    '''
+    You used heap in this, heap is used for evict priority ticket based cache, not in simple LFU
+    '''
+
+    def __init__(self, capacity: int):
+        self.size = capacity
+        self.cache = dict()
+        self.freq = dict()
+        self.lfu = []
+
+    def get(self, key: int) -> int:
+        if key not in self.cache:
+            return -1
+        return self.updateFreq(key)
+
+    def put(self, key: int, value: int) -> None:
+        if key not in self.cache and len(self.cache) >= self.size:
+            self.popLast()
+
+        if key in self.cache:
+            _, fre = self.cache[key]
+            self.cache[key] = (value, fre)
+            self.updateFreq(key)
+        else:
+            self.cache[key] = (value, 1)
+            if 1 in self.freq:
+                self.freq[1][key] = value
+                self.freq[1].move_to_end(key, last=False)
+            else:
+                self.freq[1] = OrderedDict()
+                self.freq[1][key] = value
+                heappush(self.lfu, 1)
+
+    def popLast(self) -> None:
+        lf = self.lfu[0]
+        lru = self.freq[lf]
+        while len(lru) == 0:
+            heappop(self.lfu)
+            self.freq.pop(lf)
+            lf = self.lfu[0]
+            lru = self.freq[lf]
+        lastKey, _ = lru.popitem(last=True)
+        self.freq[lf] = lru
+        self.cache.pop(lastKey)
+    
+    def updateFreq(self, key) -> int:
+        val, fre = self.cache[key]
+
+        self.freq[fre].pop(key)
+        fre += 1
+        self.cache[key] = (val, fre)
+        
+        if fre in self.freq:
+            self.freq[fre][key] = val
+            self.freq[fre].move_to_end(key, last=False)
+        else:
+            self.freq[fre] = OrderedDict()
+            self.freq[fre][key] = val
+            heappush(self.lfu, fre)
+        return val
+
+
+# Your LFUCache object will be instantiated and called as such:
+# obj = LFUCache(capacity)
+# param_1 = obj.get(key)
+# obj.put(key,value)
+
+
+# 460. LFU Cache (https://leetcode.com/problems/lfu-cache/description/) - Hard - Duplicate
+from collections import defaultdict, OrderedDict
+
+class LFUCache:
+    '''
+    Time Complexity: O(1)
+    Space Complexity: O(c)
+    where, c is the capacity
+    True LFU
+    '''
+
+    def __init__(self, capacity: int):
+        self.capacity = capacity
+        self.key_to_val_freq = {}
+        self.freq_to_keys = defaultdict(OrderedDict)
+        self.min_freq = 0
+
+    def get(self, key: int) -> int:
+        if key not in self.key_to_val_freq:
+            return -1
+        self._increase_freq(key)
+        return self.key_to_val_freq[key][0]
+
+    def put(self, key: int, value: int) -> None:
+        if key in self.key_to_val_freq:
+            self.key_to_val_freq[key] = (value, self.key_to_val_freq[key][1])
+            self._increase_freq(key)
+            return
+
+        if len(self.key_to_val_freq) == self.capacity:
+            self._evict()
+
+        self.key_to_val_freq[key] = (value, 1)
+        self.freq_to_keys[1][key] = None
+        self.min_freq = 1
+
+    def _increase_freq(self, key: int):
+        value, freq = self.key_to_val_freq[key]
+
+        self.freq_to_keys[freq].pop(key)
+
+        if freq == self.min_freq and not self.freq_to_keys[freq]:
+            self.min_freq += 1
+
+        self.key_to_val_freq[key] = (value, freq + 1)
+        self.freq_to_keys[freq + 1][key] = None
+
+    def _evict(self):
+        key, _ = self.freq_to_keys[self.min_freq].popitem(last=False)
+        del self.key_to_val_freq[key]
+
+
+# 1604. Alert Using Same Key-Card Three or More Times in a One Hour Period (https://leetcode.com/problems/alert-using-same-key-card-three-or-more-times-in-a-one-hour-period/description/) - Medium
+class Solution:
+    '''
+    Time Complexity: O(n log n)
+    Space Complexity: O(n)
+    where, n is the length of keyTime
+    '''
+    def alertNames(self, keyName: List[str], keyTime: List[str]) -> List[str]:
+        times = {}
+        out = []
+
+        for i, key in enumerate(keyName):
+            times.setdefault(key, []).append(keyTime[i])
+        
+        for key in times:
+            slots = times[key]
+            slots.sort()
+            for i in range(len(slots)-2):
+                startHr, startMin = slots[i].split(":")
+                start = int(startHr)*60 + int(startMin)
+                endHr, endMin = slots[i+2].split(":")
+                end = int(endHr)*60 + int(endMin)
+                if end <= start + 60:
+                    out.append(key)
+                    break
+        return sorted(out)
+
+
+# 743. Network Delay Time (https://leetcode.com/problems/network-delay-time/description/) - Medium
+from heapq import heappush, heappop
+class Solution:
+    '''
+    Time Complexity: O(E log E)
+    Space Complexity: O(E + V)
+    where, E is the number of edges and V is the number of vertices in the graph.
+    Solved in 19 mins, all by yourself! Good job! You did see the solution before, when you were researching for Dijkstra's algorithm
+    '''
+    def networkDelayTime(self, times: List[List[int]], n: int, k: int) -> int:
+        visited = set()
+        queue = []
+        nodes = {}
+        time = 0
+
+        for a, b, w in times:
+            nodes.setdefault(a, []).append((b, w))
+
+        heappush(queue, (0, k))
+
+        while queue and len(visited) < n:
+            time, node = heappop(queue)
+            for child, dist in nodes.get(node, []):
+                if child not in visited:
+                    heappush(queue, (time + dist, child))
+            visited.add(node)
+            
+        return time if len(visited) == n else -1
+
+
+
+
+#######  DAILY CHALLENGES  #######
+
+# 1975. Maximum Matrix Sum (https://leetcode.com/problems/maximum-matrix-sum/description/) - Medium - 2026-01-05
+class Solution:
+    '''
+    Did not go through the solution yet!
+    '''
+    def maxMatrixSum(self, matrix: List[List[int]]) -> int:
+        total_sum = 0
+        min_abs = float('inf')
+        negative_count = 0
+        
+        for row in matrix:
+            for val in row:
+                if val < 0:
+                    negative_count += 1
+                abs_val = abs(val)
+                total_sum += abs_val
+                min_abs = min(min_abs, abs_val)
+        
+        # If number of negatives is odd, one smallest absolute value must stay negative
+        if negative_count % 2 == 1:
+            total_sum -= 2 * min_abs
+        
+        return total_sum
+
+
+# 1161. Maximum Level Sum of a Binary Tree (https://leetcode.com/problems/maximum-level-sum-of-a-binary-tree/description/) - Medium - 2026-01-06
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(w)
+    Where, n is number of nodes in the tree, w is maximum width of the tree.
+    Simple BFS level order traversal problem.
+    '''
+    def maxLevelSum(self, root: Optional[TreeNode]) -> int:
+        maxValue = root.val
+        maxLevel = 1
+        level = 1
+        nodes = [root]
+
+        while nodes:
+            childNodes = []
+            value = 0
+            for node in nodes:
+                if node.left:
+                    childNodes.append(node.left)
+                if node.right:
+                    childNodes.append(node.right)
+                value += node.val
+            if value > maxValue:
+                maxLevel = level
+                maxValue = value
+            nodes = childNodes
+            level += 1
+        
+        return maxLevel
+
+
+# 1339. Maximum Product of Splitted Binary Tree (https://leetcode.com/problems/maximum-product-of-splitted-binary-tree/description/) - Medium - 2026-01-07
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    Where, n is number of nodes in the tree.
+    Although this is an optimal solution theoretically, in real world there is a more optimal solution where caching is not needed for getSum function.
+    When trees is too large, cache look ups might take O(n) time instead of O(1) due to hash collisions, hence in real world this is slower.
+    There is a more optimal solution where caching is not needed for getSum function, refer next solution.'''
+    def maxProduct(self, root: Optional[TreeNode]) -> int:
+        maxVal = 0
+        
+        @cache # from functools import cache
+        def getSum(node):
+            if not node:
+                return 0
+            return node.val + getSum(node.left) + getSum(node.right)
+            
+        totalSum = getSum(root)
+
+        def dfs(node):
+            if not node:
+                return
+            nonlocal maxVal
+            curSum = node.val + getSum(node.left) + getSum(node.right)
+            maxVal = max(maxVal, curSum * (totalSum - curSum))
+            dfs(node.left)
+            dfs(node.right)
+            return
+        
+        dfs(root)
+        return maxVal % (10**9 + 7)
+
+# 1339. Maximum Product of Splitted Binary Tree (https://leetcode.com/problems/maximum-product-of-splitted-binary-tree/description/) - Medium - 2026-01-07 - Duplicate
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    Where, n is number of nodes in the tree.
+    A cleaner solution than previous one.'''
+    def maxProduct(self, root: Optional[TreeNode]) -> int:
+        maxVal = 0
+        subtreeSums = list()
+
+        def getSum(node):
+            if node is None:
+                return 0
+            total = node.val + getSum(node.left) + getSum(node.right)
+            nonlocal subtreeSums
+            subtreeSums.append(total)
+            return total
+
+        totalSum = getSum(root)
+
+        for val in subtreeSums:
+            maxVal = max(maxVal, val * (totalSum - val))
+
+        return maxVal % (10**9 + 7)
+
+
+# 1458. Max Dot Product of Two Subsequences (https://leetcode.com/problems/max-dot-product-of-two-subsequences/description/) - Hard - 2026-01-08
+class Solution:
+    '''
+    Time Complexity: O(n * m)
+    Space Complexity: O(n * m)
+    Where, n is length of nums1, m is length of nums2.
+    Dynamic Programming with memoization problem.
+    '''
+    def maxDotProduct(self, nums1: List[int], nums2: List[int]) -> int:
+        @cache
+        def dp(i,j):
+            if i >= len(nums1) or j >= len(nums2):
+                return float('-inf')
+            prod = nums1[i]*nums2[j]
+            return max(prod, prod + dp(i+1,j+1), dp(i, j+1), dp(i+1, j))
+        return dp(0,0)
+
+
+# 865. Smallest Subtree with all the Deepest Nodes (https://leetcode.com/problems/smallest-subtree-with-all-the-deepest-nodes/description/) - Medium - 2026-01-09
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    Where, n is number of nodes in the tree.
+    This is good enough solution for interview purposes.
+    We used BFS to find the deepest nodes, then we backtrack using parent pointers 
+    to find the lowest common ancestor (LCA) of those deepest nodes. Total 2 passes are done on the tree.
+    The most optimal solution uses DFS in a single pass to find the LCA of deepest nodes.
+    Refer (https://youtu.be/bMXHK-ASQV0) for most optimal solution.'''
+    def subtreeWithAllDeepest(self, root: Optional[TreeNode]) -> Optional[TreeNode]:
+        # if not root:
+        #     return None
+        level = [root]
+        deepestNodes = level
+        parent = dict()
+        
+        while len(level) > 0:
+            newLevel = []
+            for node in level:
+                if node.left:
+                    newLevel.append(node.left)
+                    parent[node.left] = node
+                if node.right:
+                    newLevel.append(node.right)
+                    parent[node.right] = node
+            deepestNodes = level
+            level = newLevel
+        
+        lca = set(deepestNodes)
+        lca.discard(None)
+        
+        while len(lca) > 1:
+            lca = set([parent[node] for node in lca])
+
+        return lca.pop() # root if len(lca) == 0 else lca.pop()
+
+
+# 712. Minimum ASCII Delete Sum for Two Strings (https://leetcode.com/problems/minimum-ascii-delete-sum-for-two-strings/description/) - Medium - 2026-01-10
+class Solution:
+    '''
+    Time Complexity: O(m * n)
+    Space Complexity: O(m * n)
+    Where, m is length of s1, n is length of s2.
+    Dynamic Programming with memoization problem.
+    '''
+    def minimumDeleteSum(self, s1: str, s2: str) -> int:
+        @cache        
+        def dp(i,j):
+            if i >= len(s1):
+                return sum([ord(c) for c in s2[j:]])
+            if j >= len(s2):
+                return sum([ord(c) for c in s1[i:]])
+            if s1[i] == s2[j]:
+                return dp(i+1,j+1)
+            return min(ord(s1[i]) + dp(i+1,j), ord(s2[j]) + dp(i,j+1))
+        return dp(0,0)
+
+
+# 85. Maximal Rectangle (https://leetcode.com/problems/maximal-rectangle/description/) - Medium - 2026-01-11
+class Solution:
+    '''
+    Time Complexity: O(m * n)
+    Space Complexity: O(n)
+    Where, m is number of rows, and n is number of columns of matrix
+    DID NOT GO THROUGH THE SOLUTION YET
+    '''
+    def maximalRectangle(self, matrix: List[List[str]]) -> int:
+        if not matrix or not matrix[0]:
+            return 0
+
+        R, C = len(matrix), len(matrix[0])
+        heights = [0] * C
+        maxA = 0
+
+        def largestRectangleArea(heights):
+            stack = []
+            res = 0
+            heights.append(0)  # sentinel
+
+            for i, h in enumerate(heights):
+                while stack and heights[stack[-1]] > h:
+                    height = heights[stack.pop()]
+                    width = i if not stack else i - stack[-1] - 1
+                    res = max(res, height * width)
+                stack.append(i)
+
+            heights.pop()
+            return res
+
+        for i in range(R):
+            for j in range(C):
+                if matrix[i][j] == "1":
+                    heights[j] += 1
+                else:
+                    heights[j] = 0
+
+            maxA = max(maxA, largestRectangleArea(heights))
+
+        return maxA
+
+
+
+# 1266. Minimum Time Visiting All Points (https://leetcode.com/problems/minimum-time-visiting-all-points/description/) - Easy - 2026-01-12
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(1)
+    Where, n is number of points.
+    Simple Greedy problem.
+    '''
+    def minTimeToVisitAllPoints(self, points: List[List[int]]) -> int:
+        time = 0
+        for i in range(1, len(points)):
+            hr = abs(points[i][0] - points[i-1][0])
+            ve = abs(points[i][1] - points[i-1][1])
+            time += max(hr, ve)
+        return time
+
+
+# 3453. Separate Squares I (https://leetcode.com/problems/separate-squares-i/description/) - Medium - 2026-01-13
+class Solution:
+    '''
+    Time Complexity: O(n log m)
+    Space Complexity: O(1)
+    Where, n is number of squares, m is the Y co-ordinates range of the squares.
+    More optimal solution uses sweep-line / prefix-area approach, but this is good enough for interview.
+    '''
+    def separateSquares(self, squares: List[List[int]]) -> float:
+        target = sum(l*l for x,y,l in squares)/2.0
+        low = min(y for x,y,l in squares)
+        high = max(y+l for x,y,l in squares)
+        
+        def getLowArea(h):
+            area = 0
+            for x,y,l in squares:
+                if y+l <= h:
+                    area += l*l
+                elif y < h < y + l:
+                    area += l * (h-y)
+            return area
+
+        mid = low
+        while high - low > 1e-6:
+            mid = (low + high)/2.0
+            area = getLowArea(mid)
+            if area >= target:
+                high = mid
+            else:
+                low = mid
+        
+        return mid
+
+
+# 3454. Separate Squares II (https://leetcode.com/problems/separate-squares-ii/description/) - Hard - 2026-01-14
+class Solution:
+    '''
+    Time Complexity: O((n^2) * log n)
+    Space Complexity: O(n)
+    Where, n is number of squares.
+    Sweep-line / prefix-area approach problem.
+    DID NOT GO THROUGH THE SOLUTION YET!
+    '''
+    def separateSquares(self, squares: List[List[int]]) -> float:
+        # Step 1: build y-events
+        events = defaultdict(list)
+        for x, y, l in squares:
+            events[y].append((x, x + l, 1))      # add interval
+            events[y + l].append((x, x + l, -1)) # remove interval
+
+        ys = sorted(events.keys())
+
+        # Helper to compute union length of x-intervals
+        def union_length(intervals):
+            if not intervals:
+                return 0
+            intervals.sort()
+            total = 0
+            cur_l, cur_r = intervals[0]
+            for l, r in intervals[1:]:
+                if l > cur_r:
+                    total += cur_r - cur_l
+                    cur_l, cur_r = l, r
+                else:
+                    cur_r = max(cur_r, r)
+            total += cur_r - cur_l
+            return total
+
+        # Step 2: First sweep — compute total union area
+        active = []
+        total_area = 0.0
+
+        for i in range(len(ys) - 1):
+            y = ys[i]
+            y2 = ys[i + 1]
+
+            for x1, x2, typ in events[y]:
+                if typ == 1:
+                    active.append((x1, x2))
+                else:
+                    active.remove((x1, x2))
+
+            width = union_length(active)
+            total_area += width * (y2 - y)
+
+        target = total_area / 2.0
+
+        # Step 3: Second sweep — find minimum y
+        active.clear()
+        area = 0.0
+
+        for i in range(len(ys) - 1):
+            y = ys[i]
+            y2 = ys[i + 1]
+
+            for x1, x2, typ in events[y]:
+                if typ == 1:
+                    active.append((x1, x2))
+                else:
+                    active.remove((x1, x2))
+
+            width = union_length(active)
+            slab_area = width * (y2 - y)
+
+            if area + slab_area >= target:
+                # interpolate inside this slab
+                return y + (target - area) / width
+
+            area += slab_area
+
+        return ys[-1]  # fallback (should never hit)
+
+
+# 2943. Maximize Area of Square Hole in Grid (https://leetcode.com/problems/maximize-area-of-square-hole-in-grid/description/) - Medium - 2026-01-15
+class Solution:
+    '''
+    Time Complexity: O(m log m + n log n)
+    Space Complexity: O(1)
+    Where, m is number of horizontal bars, n is number of vertical bars.
+    The key insight is that we can only make a square hole of side S,
+    if there are at least S-1 consecutive horizontal bars and S-1 consecutive vertical bars.
+    So problem gets reduced to finding maximum consecutive streak in both horizontal and vertical bars.
+    Sort the bars and find maximum consecutive difference.
+    The side value is minimum of ( maximum consecutive horizontal and vertical gaps ) + 1.
+    Square the side value to get maximum area.
+    '''
+    def maximizeSquareHoleArea(self, n: int, m: int, hBars: List[int], vBars: List[int]) -> int:
+        def max_gap(bars):
+            bars.sort()
+            max_streak = 1
+            curr = 1
+            
+            for i in range(1, len(bars)):
+                if bars[i] == bars[i - 1] + 1:
+                    curr += 1
+                else:
+                    curr = 1
+                max_streak = max(max_streak, curr)
+            
+            # gap size = consecutive bars + 1
+            return max_streak + 1
+
+        max_h = max_gap(hBars)
+        max_v = max_gap(vBars)
+        
+        side = min(max_h, max_v)
+        return side * side
+
+
+# 2975. Maximum Square Area by Removing Fences From a Field (https://leetcode.com/problems/maximum-square-area-by-removing-fences-from-a-field/description/) - Medium - 2026-01-16
+class Solution:
+    '''
+    Time Complexity: O(h^2 + v^2)
+    Space Complexity: O(h^2 + v^2). Actual: O(min(m + n, h^2 + v^2))
+    Where, h is number of horizontal fences, v is number of vertical fences (including boundaries 1 and m/n).
+    The key insight is that we can only make a square of side S,
+    if there exists a horizontal fence at distance S from some other horizontal fence,
+    and similarly for vertical fences.
+    So we generate all possible horizontal distances and store in a set.
+    Then we generate all possible vertical distances and check if it exists in horizontal distances set.
+    Return the largest such distance.
+    '''
+    def maximizeSquareArea(self, m: int, n: int, hFences: List[int], vFences: List[int]) -> int:
+        # Include boundary fences
+        h = sorted([1] + hFences + [m])
+        v = sorted([1] + vFences + [n])
+
+        # All possible horizontal distances
+        h_dist = set()
+        for i in range(len(h)):
+            for j in range(i + 1, len(h)):
+                h_dist.add(h[j] - h[i])
+
+        # All possible vertical distances
+        v_dist = set()
+        for i in range(len(v)):
+            for j in range(i + 1, len(v)):
+                v_dist.add(v[j] - v[i])
+
+        # Find largest common distance
+        common = h_dist & v_dist
+        if not common:
+            return -1
+
+        max_side = max(common)
+        return (max_side * max_side) % (10**9 + 7)
+
+
+# 3047. Find the Largest Area of Square Inside Two Rectangles (https://leetcode.com/problems/find-the-largest-area-of-square-inside-two-rectangles/description/) - Medium - 2026-01-17
+class Solution:
+    '''
+    Time Complexity: O(n^2)
+    Space Complexity: O(1)
+    Where, n is number of rectangles.
+    Brute-force approach to check all pairs of rectangles.
+    For each pair, find the overlapping width and height.
+    NOTE: Just trying to calculate overlapping width and height directly solves to check if there is any overlap or not, 
+    you don't need to check that separately.
+    PIT FALLS:
+    You first mis-understood the question statement, thinking that if one rectangle had multiple overlaps with other rectangles, 
+    then all those overlaps should be considered.
+    But actually, only overlaps between any two given rectangles is to be considered. 
+    Once you start solving you try to find if there is any intersection between 2 rectangles, 
+    as it's process you first wrote down this condition `if (xbj < xti <= xtj and ybj < yti <= ytj) or (xbj <= xbi < xtj and ybj <= ybi < ytj):`.
+    But when you started writing code for finding overlapping width and height, 
+    you realized that you didn't need that condition at all, as the overlapping width and height calculations 
+    would automatically take care of non-overlapping rectangles by resulting in zero width or height.
+    So you removed that condition from the final code.
+    '''
+    def largestSquareArea(self, bottomLeft: List[List[int]], topRight: List[List[int]]) -> int:
+        area = 0
+        n = len(bottomLeft)
+        for i in range(n):
+            xbi, ybi = bottomLeft[i]
+            xti, yti = topRight[i]
+            for j in range(i+1, n):
+                xbj, ybj = bottomLeft[j]
+                xtj, ytj = topRight[j]
+
+                x1 = max(xbi, xbj)
+                x2 = min(xti, xtj)
+                x = max(x2-x1, 0)
+                y1 = max(ybi, ybj)
+                y2 = min(yti, ytj)
+                y = max(y2-y1, 0)
+                s = min(x,y)
+
+                area = max(area, s*s)                    
+        return area
+
+
+# 1895. Largest Magic Square (https://leetcode.com/problems/largest-magic-square/description/) - Medium - 2026-01-18
+class Solution:
+    '''
+    Time Complexity: O(m * n * min(m, n)^2)
+    Space Complexity: O(m * n)
+    Where, m is number of rows, n is number of columns in the grid.
+    Prefix sums + Brute-force problem.
+    1. Calculate prefix sums for rows, columns and both diagonals.
+    2. Try larger sizes first, for each size, check all possible squares of that size.
+    3. For each square, check if all rows, columns and both diagonals sum to same target value.
+    4. Return the size of the first square found.
+    DID NOT GO THROUGH THE SOLUTION YET!
+    '''
+    def largestMagicSquare(self, grid: List[List[int]]) -> int:
+        m, n = len(grid), len(grid[0])
+
+        # Prefix sums
+        row = [[0] * (n + 1) for _ in range(m)]
+        col = [[0] * n for _ in range(m + 1)]
+        diag1 = [[0] * (n + 1) for _ in range(m + 1)]
+        diag2 = [[0] * (n + 1) for _ in range(m + 1)]
+
+        for i in range(m):
+            for j in range(n):
+                row[i][j + 1] = row[i][j] + grid[i][j]
+                col[i + 1][j] = col[i][j] + grid[i][j]
+                diag1[i + 1][j + 1] = diag1[i][j] + grid[i][j]
+                diag2[i + 1][j] = diag2[i][j + 1] + grid[i][j]
+
+        # Try larger sizes first
+        for k in range(min(m, n), 1, -1):
+            for r in range(m - k + 1):
+                for c in range(n - k + 1):
+                    target = row[r][c + k] - row[r][c]
+
+                    ok = True
+                    # rows
+                    for i in range(r, r + k):
+                        if row[i][c + k] - row[i][c] != target:
+                            ok = False
+                            break
+
+                    # columns
+                    for j in range(c, c + k):
+                        if col[r + k][j] - col[r][j] != target:
+                            ok = False
+                            break
+
+                    # diagonals
+                    d1 = diag1[r + k][c + k] - diag1[r][c]
+                    d2 = diag2[r + k][c] - diag2[r][c + k]
+
+                    if ok and d1 == target and d2 == target:
+                        return k
+
+        return 1
+
+
+# 1292. Maximum Side Length of a Square with Sum Less than or Equal to Threshold (https://leetcode.com/problems/maximum-side-length-of-a-square-with-sum-less-than-or-equal-to-threshold/description/) - Medium - 2026-01-19
+class Solution:
+    '''
+    Time Complexity: O(m * n * log(min(m, n)))
+    Space Complexity: O(m * n)
+    Where, m is number of rows, n is number of columns in the matrix.
+    Prefix sums + Binary Search problem.
+    DID NOT GO THROUGH THE SOLUTION YET!
+    '''
+    def maxSideLength(self, mat: List[List[int]], threshold: int) -> int:
+        m, n = len(mat), len(mat[0])
+
+        # Build prefix sum array
+        pre = [[0] * (n + 1) for _ in range(m + 1)]
+        for i in range(1, m + 1):
+            for j in range(1, n + 1):
+                pre[i][j] = (
+                    mat[i - 1][j - 1]
+                    + pre[i - 1][j]
+                    + pre[i][j - 1]
+                    - pre[i - 1][j - 1]
+                )
+
+        # Check if there exists a square of side k with sum <= threshold
+        def can(k):
+            for i in range(m - k + 1):
+                for j in range(n - k + 1):
+                    total = (
+                        pre[i + k][j + k]
+                        - pre[i][j + k]
+                        - pre[i + k][j]
+                        + pre[i][j]
+                    )
+                    if total <= threshold:
+                        return True
+            return False
+
+        # Binary search on side length
+        low, high = 0, min(m, n)
+        ans = 0
+        while low <= high:
+            mid = (low + high) // 2
+            if can(mid):
+                ans = mid
+                low = mid + 1
+            else:
+                high = mid - 1
+
+        return ans
+
+
+# 3314. Construct the Minimum Bitwise Array I (https://leetcode.com/problems/construct-the-minimum-bitwise-array-i/description/) - Easy - 2026-01-20
+class Solution:
+    '''
+    Time Complexity: O(n log m)
+    Space Complexity: O(1)
+    Where, n is number of elements in nums, m is maximum value in nums.
+    DID NOT GO THROUGH THE SOLUTION YET!
+    '''
+    def minBitwiseArray(self, nums: List[int]) -> List[int]:
+        ans = []
+        for m in nums:
+            if m == 2:
+                ans.append(-1)
+            else:
+                t = 0
+                x = m
+                while x & 1:
+                    t += 1
+                    x >>= 1
+                ans.append(m - (1 << (t - 1)))
+        return ans
+
+
+# 3315. Construct the Minimum Bitwise Array II (https://leetcode.com/problems/construct-the-minimum-bitwise-array-ii/description/) - Medium - 2026-01-21
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(1)
+    where, n is length of nums
+    DID NOT GO THROUGH THE SOLUTION YET!
+    '''
+    def minBitwiseArray(self, nums: List[int]) -> List[int]:
+        ans = []
+        for n in nums:
+            if n % 2 == 0:
+                ans.append(-1)
+                continue
+
+            t = 0
+            temp = n
+            while temp & 1:
+                t += 1
+                temp >>= 1
+
+            ans.append(n - (1 << (t - 1)))
+        return ans
+
+
+# 3507. Minimum Pair Removal to Sort Array I (https://leetcode.com/problems/minimum-pair-removal-to-sort-array-i/description/) - Easy - 2026-01-22
+class Solution:
+    '''
+    Time Complexity: O(n^2)
+    Space Complexity: O(n)
+    where, n is the length of nums
+    NOTE: You did not understand what minimum sum was in the question for which, 
+    you can't be blamed cause there was nobody to ask when solo leet-coding, 
+    and you were trying to achieve better time complexity without fully understanding the problem,
+    which killed a lot of time!
+    '''
+    def minimumPairRemoval(self, nums: List[int]) -> int:
+        def is_non_decreasing(arr):
+            for i in range(1, len(arr)):
+                if arr[i] < arr[i - 1]:
+                    return False
+            return True
+        
+        operations = 0
+        while not is_non_decreasing(nums):
+            min_sum = float('inf')
+            idx = 0
+            for i in range(len(nums) - 1):
+                s = nums[i] + nums[i + 1]
+                if s < min_sum:
+                    min_sum = s
+                    idx = i
+            nums[idx] = nums[idx] + nums[idx + 1]
+            nums.pop(idx+1)
+            operations += 1
+        
+        return operations
+
+
+# 3510. Minimum Pair Removal to Sort Array II (https://leetcode.com/problems/minimum-pair-removal-to-sort-array-ii/description/) - Hard - 2026-01-23
+from heapq import heappush, heappop
+class Solution:
+    '''
+    Time Complexity: O(n log n)
+    Space Complexity: O(n)
+    where, n is the length of nums
+    DID NOT GO THROUGH THE SOLUTION YET!
+    '''
+    def minimumPairRemoval(self, nums: List[int]) -> int:
+        n = len(nums)
+        if n <= 1:
+            return 0
+
+        left = [-1] + list(range(n - 1))
+        right = list(range(1, n)) + [-1]
+        alive = [True] * n
+
+        bad = 0
+        for i in range(n - 1):
+            if nums[i] > nums[i + 1]:
+                bad += 1
+
+        if bad == 0:
+            return 0
+
+        heap = []
+        for i in range(n - 1):
+            heappush(heap, (nums[i] + nums[i + 1], i))
+
+        ops = 0
+
+        while bad > 0:
+            s, i = heappop(heap)
+
+            if not alive[i]:
+                continue
+
+            j = right[i]
+            if j == -1 or not alive[j]:
+                continue
+
+            if nums[i] + nums[j] != s:
+                continue
+
+            li = left[i]
+            rj = right[j]
+
+            if li != -1 and nums[li] > nums[i]:
+                bad -= 1
+            if nums[i] > nums[j]:
+                bad -= 1
+            if rj != -1 and nums[j] > nums[rj]:
+                bad -= 1
+
+            nums[i] += nums[j]
+            alive[j] = False
+
+            right[i] = rj
+            if rj != -1:
+                left[rj] = i
+
+            if li != -1 and nums[li] > nums[i]:
+                bad += 1
+            if rj != -1 and nums[i] > nums[rj]:
+                bad += 1
+
+            if li != -1:
+                heappush(heap, (nums[li] + nums[i], li))
+            if rj != -1:
+                heappush(heap, (nums[i] + nums[rj], i))
+
+            ops += 1
+
+        return ops
+
+
+# 1877. Minimize Maximum Pair Sum in Array (https://leetcode.com/problems/minimize-maximum-pair-sum-in-array/description/) - Medium - 2026-01-24
+class Solution:
+    '''
+    Time Complexity: O(n log n)
+    Space Complexity: O(1) (Assuming, sorted nums is not considered)
+    where, n is the length of nums
+    Solved in 4 mins 36 secs, all by yourself! Good job!
+    '''
+    def minPairSum(self, nums: List[int]) -> int:
+        nums.sort()
+        res = 0
+        l, r = 0, len(nums)-1
+        while l < r:
+            res = max(res,nums[l]+nums[r])
+            l += 1
+            r -= 1
+        return res
+
+
+# 1984. Minimum Difference Between Highest and Lowest of K Scores (https://leetcode.com/problems/minimum-difference-between-highest-and-lowest-of-k-scores/description/) - Easy - 2026-01-25
+class Solution:
+    '''
+    Time Complexity: O(n log n)
+    Space Complexity: O(1) (Assuming, sorted nums is not considered)
+    where, n is the length of nums
+    Solved in 4 mins 38 secs, all by yourself! Good job!
+    '''
+    def minimumDifference(self, nums: List[int], k: int) -> int:
+        nums.sort()
+        output = nums[-1]-nums[0]
+        k-=1
+        for i in range(len(nums)-k):
+            output = min(output, nums[i+k]-nums[i])
+        return output
+
+
+# 1200. Minimum Absolute Difference (https://leetcode.com/problems/minimum-absolute-difference/description/) - Easy - 2026-01-26
+class Solution:
+    '''
+    Time Complexity: O(n log n)
+    Space Complexity: O(1) (Assuming, sorted nums is not considered)
+    where, n is the length of nums
+    Solved in 6 mins 40 secs, all by yourself! Good job!
+    '''
+    def minimumAbsDifference(self, arr: List[int]) -> List[List[int]]:
+        arr.sort()
+        val = arr[-1] - arr[0]
+        out = []
+        for i in range(len(arr)-1):
+            diff = arr[i+1]-arr[i]
+            if diff < val:
+                val = diff
+                out = [[arr[i], arr[i+1]]]
+            elif diff == val:
+                out.append([arr[i], arr[i+1]])
+        return out
+
+
+# 3650. Minimum Cost Path with Edge Reversals (https://leetcode.com/problems/minimum-cost-path-with-edge-reversals/description/) - Medium - 2026-01-28
+import heapq
+from collections import defaultdict
+class Solution:
+    '''
+    Did not go through the solution yet!
+    '''
+    def minCost(self, n: int, edges: list[list[int]]) -> int:
+        graph = defaultdict(list)
+
+        # Build graph
+        for u, v, w in edges:
+            graph[u].append((v, w))        # normal edge
+            graph[v].append((u, 2 * w))    # reversed edge via switch
+
+        INF = float('inf')
+        dist = [INF] * n
+        dist[0] = 0
+
+        pq = [(0, 0)]  # (cost, node)
+
+        while pq:
+            cost, u = heapq.heappop(pq)
+            if cost > dist[u]:
+                continue
+
+            for v, w in graph[u]:
+                if dist[v] > cost + w:
+                    dist[v] = cost + w
+                    heapq.heappush(pq, (dist[v], v))
+
+        return dist[n - 1] if dist[n - 1] != INF else -1
+
+
+# 3651. Minimum Cost Path with Teleportations (https://leetcode.com/problems/minimum-cost-path-with-teleportations/description/) - Hard - 2026-01-28
+class Solution:
+    '''
+    Absolute waste of 2hrs 30 min
+    Did not go through the solution yet!
+    '''
+    def minCost(self, grid: List[List[int]], k: int) -> int:
+        m, n = len(grid), len(grid[0])
+        inf = float('inf')
+        
+        # dp[r][c] stores the minimum cost to reach (r, c)
+        dp = [[inf] * n for _ in range(m)]
+        dp[0][0] = 0
+        
+        # Helper to propagate costs using only Right and Down moves
+        def propagate(curr_dp):
+            for r in range(m):
+                for c in range(n):
+                    if r > 0:
+                        if curr_dp[r-1][c] + grid[r][c] < curr_dp[r][c]:
+                            curr_dp[r][c] = curr_dp[r-1][c] + grid[r][c]
+                    if c > 0:
+                        if curr_dp[r][c-1] + grid[r][c] < curr_dp[r][c]:
+                            curr_dp[r][c] = curr_dp[r][c-1] + grid[r][c]
+        
+        # Initial pass for 0 teleports
+        propagate(dp)
+        
+        # Determine the range of grid values for the suffix-min array
+        max_v = 0
+        for row in grid:
+            for val in row:
+                if val > max_v:
+                    max_v = val
+        
+        # Iterate through the number of teleports available
+        for _ in range(k):
+            # val_min[v] = min cost to reach any cell with value == v
+            val_min = [inf] * (max_v + 1)
+            for r in range(m):
+                for c in range(n):
+                    v = grid[r][c]
+                    if dp[r][c] < val_min[v]:
+                        val_min[v] = dp[r][c]
+            
+            # suffix_min[v] = min cost to reach any cell with value >= v
+            suffix_min = [inf] * (max_v + 2)
+            for v in range(max_v, -1, -1):
+                suffix_min[v] = min(val_min[v], suffix_min[v+1])
+            
+            # next_dp starts with the best costs from the previous teleport level
+            next_dp = [row[:] for row in dp]
+            improved = False
+            
+            for r in range(m):
+                for c in range(n):
+                    # We can teleport to (r, c) from any cell with grid value >= grid[r][c]
+                    # The cost is the cost to reach that source cell (suffix_min[grid[r][c]])
+                    t_cost = suffix_min[grid[r][c]]
+                    if t_cost < next_dp[r][c]:
+                        next_dp[r][c] = t_cost
+                        improved = True
+            
+            # If no teleportations improved the costs, we can stop early
+            if not improved:
+                break
+            
+            # After teleporting, we can perform further normal moves (Right/Down)
+            propagate(next_dp)
+            dp = next_dp
+            
+        return dp[m-1][n-1]
+
+
+# 2976. Minimum Cost to Convert String I (https://leetcode.com/problems/minimum-cost-to-convert-string-i/description/) - Medium - 2026-01-29
+class Solution:
+    '''
+    This one use Floyd-Warshall algorithm
+    Can also be solved using Dijkstra's algorithm
+    Did not go through the solution yet!
+    '''
+    def minimumCost(self, source: str, target: str, original: List[str], changed: List[str], cost: List[int]) -> int:
+        
+        INF = 10**15
+        
+        # Step 1: distance matrix
+        dist = [[INF]*26 for _ in range(26)]
+        
+        for i in range(26):
+            dist[i][i] = 0
+        
+        # Step 2: direct edges
+        for o, c, w in zip(original, changed, cost):
+            u = ord(o) - ord('a')
+            v = ord(c) - ord('a')
+            dist[u][v] = min(dist[u][v], w)
+        
+        # Step 3: Floyd-Warshall
+        for k in range(26):
+            for i in range(26):
+                if dist[i][k] == INF:
+                    continue
+                for j in range(26):
+                    if dist[k][j] == INF:
+                        continue
+                    new_cost = dist[i][k] + dist[k][j]
+                    if new_cost < dist[i][j]:
+                        dist[i][j] = new_cost
+        
+        # Step 4: compute total cost
+        total = 0
+        
+        for s, t in zip(source, target):
+            if s == t:
+                continue
+            
+            u = ord(s) - ord('a')
+            v = ord(t) - ord('a')
+            
+            if dist[u][v] == INF:
+                return -1
+            
+            total += dist[u][v]
+        
+        return total
+
+
+# 2977. Minimum Cost to Convert String II (https://leetcode.com/problems/minimum-cost-to-convert-string-ii/description/) - Hard - 2026-01-30
+import math
+class TrieNode:
+    __slots__ = ("children", "id")
+    def __init__(self):
+        self.children = {}
+        self.id = -1   # string id if this node is terminal
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+    
+    def insert(self, s: str, sid: int):
+        node = self.root
+        for ch in s:
+            if ch not in node.children:
+                node.children[ch] = TrieNode()
+            node = node.children[ch]
+        node.id = sid
+
+class Solution:
+    '''
+    Did not go through the solution yet!
+    '''
+    def minimumCost(self, source: str, target: str,
+                    original: List[str], changed: List[str], cost: List[int]) -> int:
+        n = len(source)
+        INF = 10**18
+
+        # ---------- Step 1: assign ids ----------
+        strings = {}
+        sid = 0
+        for s in original + changed:
+            if s not in strings:
+                strings[s] = sid
+                sid += 1
+        
+        m = sid
+
+        # ---------- Step 2: Floyd–Warshall ----------
+        dist = [[INF] * m for _ in range(m)]
+        for i in range(m):
+            dist[i][i] = 0
+        
+        for o, c, w in zip(original, changed, cost):
+            u, v = strings[o], strings[c]
+            dist[u][v] = min(dist[u][v], w)
+        
+        for k in range(m):
+            for i in range(m):
+                if dist[i][k] == INF:
+                    continue
+                for j in range(m):
+                    nd = dist[i][k] + dist[k][j]
+                    if nd < dist[i][j]:
+                        dist[i][j] = nd
+
+        # ---------- Step 3: build tries ----------
+        trieS = Trie()
+        trieT = Trie()
+        for s, i in strings.items():
+            trieS.insert(s, i)
+            trieT.insert(s, i)
+
+        # ---------- Step 4: DP ----------
+        dp = [INF] * (n + 1)
+        dp[0] = 0
+
+        for i in range(n):
+            if dp[i] == INF:
+                continue
+
+            # Single character match
+            if source[i] == target[i]:
+                dp[i + 1] = min(dp[i + 1], dp[i])
+
+            # Substring match via trie
+            nodeS = trieS.root
+            nodeT = trieT.root
+
+            j = i
+            while j < n:
+                cs, ct = source[j], target[j]
+                if cs not in nodeS.children or ct not in nodeT.children:
+                    break
+                nodeS = nodeS.children[cs]
+                nodeT = nodeT.children[ct]
+
+                if nodeS.id != -1 and nodeT.id != -1:
+                    c = dist[nodeS.id][nodeT.id]
+                    if c < INF:
+                        dp[j + 1] = min(dp[j + 1], dp[i] + c)
+                j += 1
+
+        return -1 if dp[n] == INF else dp[n]
+
+
+# 744. Find Smallest Letter Greater Than Target (https://leetcode.com/problems/find-smallest-letter-greater-than-target/description/) - Easy - 2026-01-31
+class Solution:
+    '''
+    Time Complexity: O(log n)
+    Space Complexity: O(1)
+    where, n is the length of letters
+    Solved in 13 min 24 secs, all by yourself! Good Job!
+    '''
+    def nextGreatestLetter(self, letters: List[str], target: str) -> str:
+        l, r = 0, len(letters)-1
+        while l < r:
+            m = (l+r)//2
+            if letters[m] <= target:
+                l = m+1
+            else:
+                r = m
+        if letters[l] <= target and l == len(letters)-1:
+            return letters[0]
+        return letters[l]
+
+# 744. Find Smallest Letter Greater Than Target (https://leetcode.com/problems/find-smallest-letter-greater-than-target/description/) - Easy - 2026-01-31 - Duplicate
+from bisect import bisect
+class Solution:
+    '''
+    Time Complexity: O(log n)
+    Space Complexity: O(1)
+    where, n is the length of letters
+    Cleaner code!
+    '''
+    def nextGreatestLetter(self, letters: List[str], target: str) -> str:
+        i = bisect(letters, target)
+        if i == len(letters):
+            return letters[0]
+        return letters[i]
+
+
+# 3010. Divide an Array Into Subarrays With Minimum Cost I (https://leetcode.com/problems/divide-an-array-into-subarrays-with-minimum-cost-i/description/) - Easy - 2026-02-01
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(1)
+    where, n is the length of nums
+    '''
+    def minimumCost(self, nums: List[int]) -> int:
+        a = 1 
+        for i in range(2, len(nums)):
+            if nums[i] < nums[a]:
+                a = i
+        b = 2 if a == 1 else 1
+        for i in range(2, len(nums)):
+            if nums[i] < nums[b] and i != a:
+                b = i
+        return nums[0] + nums[a] + nums[b]
+
+
+# 3013. Divide an Array Into Subarrays With Minimum Cost II (https://leetcode.com/problems/divide-an-array-into-subarrays-with-minimum-cost-ii/description/) - Hard - 2026-02-02
+class Solution:
+    '''
+    Did not go through the solution yet! Super hard, not worth the time!
+    '''
+    def minimumCost(self, nums: List[int], k: int, dist: int) -> int:
+        
+        def move_from_left_to_right():
+            nonlocal current_sum
+            element = left_set.pop()
+            current_sum -= element 
+            right_set.add(element)
+
+        def move_from_right_to_left():
+            nonlocal current_sum
+            element = right_set.pop(0)
+            left_set.add(element)
+            current_sum += element 
+
+        k -= 1
+
+        current_sum = sum(nums[:dist + 2])
+        left_set = SortedList(nums[1:dist + 2])
+        right_set = SortedList()
+
+        while len(left_set) > k:
+            move_from_left_to_right()
+
+        min_cost = current_sum 
+
+        for i in range(dist + 2, len(nums)):
+            outgoing_element = nums[i - dist - 1]
+            if outgoing_element in left_set:
+                left_set.remove(outgoing_element)
+                current_sum -= outgoing_element
+            else:
+                right_set.remove(outgoing_element)
+
+            incoming_element = nums[i]
+            if left_set and incoming_element < left_set[-1]:
+                left_set.add(incoming_element)
+                current_sum += incoming_element
+            else:
+                right_set.add(incoming_element)
+
+            while len(left_set) < k:
+                move_from_right_to_left()
+            while len(left_set) > k:
+                move_from_left_to_right()
+
+            min_cost = min(min_cost, current_sum)
+
+        return min_cost 
+
+
+# 3637. Trionic Array I (https://leetcode.com/problems/trionic-array-i/description/) - Easy - 2026-02-03
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    where, n is the length of nums
+    Solved in 15 mins, all by yourself! Okay job!
+    You were first trying to implement with only one for loop and using flags, 
+    but it was too complex, so around 8 mins got wasted!
+    Later you realized you could just use while loops
+    '''
+    def isTrionic(self, nums: List[int]) -> bool:
+        p = 0
+        while p < len(nums)-1 and nums[p] < nums[p+1]:
+            p += 1
+        q = p
+        while q < len(nums)-1 and nums[q] > nums[q+1]:
+            q += 1
+        n = q
+        while n < len(nums)-1 and nums[n] < nums[n+1]:
+            n += 1
+        return 0 < p < q < n and n == len(nums)-1
+
+
+# 3379. Transformed Array (https://leetcode.com/problems/transformed-array/description/) - Easy - 2026-02-05
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    where, n is the length of nums
+    Solved in 14 mins, all by yourself! Good job!
+    '''
+    def constructTransformedArray(self, nums: List[int]) -> List[int]:
+        n = len(nums)
+        result = [0]*n
+
+        for i, num in enumerate(nums):
+            p = i + num
+            p = p % n
+            result[i] = nums[p]
+        return result
+
+
+# 110. Balanced Binary Tree (https://leetcode.com/problems/balanced-binary-tree/description/) - Easy - 2026-02-08
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    where, n is the number of nodes
+    Solved in 9 mins, all by yourself! Good job! Solved before!
+    NOTE: You used exception handling to break out of recursion early when you find an unbalanced subtree, 
+    which logically is a neat trick to avoid unnecessary calculations, 
+    however this approach is not very efficient in terms of performance in real world, 
+    also considered un-pythonic approach, simply returning values is much more efficient and pythonic,
+    refer your previous solution.
+    '''
+    def isBalanced(self, root: Optional[TreeNode]) -> bool:
+        def height(node):
+            if not node:
+                return 0
+            left = height(node.left)
+            right = height(node.right)
+            if not -2 < left - right < 2:
+                raise Exception("Not a balanced tree!")
+            return 1 + max(left, right)
+        
+        try:
+            height(root)
+        except:
+            return False
+        return True
+
+
+# 1382. Balance a Binary Search Tree (https://leetcode.com/problems/balance-a-binary-search-tree/description/) - Medium - 2026-02-09
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    where, n is the number of nodes
+    Solved in 30 mins, with some debugging help! Ok job!
+    NOTE: Within the first 1.5 mins you figured out the strategy, which is to get all nodes in sorted order, 
+    then build a balanced BST from that sorted list, but you didn't know how to build a balanced BST from a sorted list, 
+    so you searched that part on the internet and found out that it's as simple as building a tree from in-order traversal or sorted list.
+    Later when you used AI to debug, you found out that you can skip the sorting step, if you process the given BST in-order, 
+    you will get the nodes in sorted order, you were having trouble dealing with left and right pointers limits, but AI helped you with those bugs.
+    '''
+    def balanceBST(self, root: Optional[TreeNode]) -> Optional[TreeNode]:
+        allNodes = []
+        def process(node):
+            nonlocal allNodes
+            if not node:
+                return
+            process(node.left)
+            allNodes.append(node)
+            process(node.right)
+            node.left = None
+            node.right = None
+            
+        process(root)
+
+        # allNodes.sort(key=lambda x: x.val) # No need to sort if you do in-order traversal of BST when processing, this gives you sorted order
+
+        n = len(allNodes)
+        head = allNodes[(n-1)//2] # Previously, you were doing n//2, but in function you were giving n-1, which was causing the head to be the second middle node in case of even number of nodes, so you corrected it to (n-1)//2 later
+        def build(l, r):
+            if l > r:
+                return None
+            m = (l+r)//2
+            node = allNodes[m]
+            node.left = build(l,m-1)
+            node.right = build(m+1,r)
+            return node
+        
+        build(0, n-1)
+        return head
+
+
+# 3719. Longest Balanced Subarray I (https://leetcode.com/problems/longest-balanced-subarray-i/description/) - Medium - 2026-02-10
+from collections import defaultdict
+class Solution:
+    '''
+    Time Complexity: O(n^2)
+    Space Complexity: O(n)
+    where, n is the length of nums
+    Solved algorithm theoretically in 7 mins, coding and debugging took 1hr! Something's better than nothing, keep going and you'll improve your time, good job on problem solving skills!
+    NOTE: This is OVER ENGINEERING, look below the simpler solution, more performant one in real life
+    '''
+    def longestBalanced(self, nums: List[int]) -> int:
+        even = defaultdict(int)
+        odd = defaultdict(int)
+        
+        def add(num):
+            if num%2 == 0:
+                even[num] += 1
+            else:
+                odd[num] += 1
+
+        def pop(num):
+            if num%2 == 0:
+                even[num] -= 1
+                if even[num] == 0:
+                    even.pop(num)
+            else:
+                odd[num] -= 1
+                if odd[num] == 0:
+                    odd.pop(num)
+
+        for w in range(len(nums), 1, -1):
+            even = defaultdict(int)
+            odd = defaultdict(int)    
+            
+            for i in range(w):
+                add(nums[i])
+            
+            if len(even) == len(odd):
+                return w
+            
+            for i in range(1, len(nums)-w+1):
+                pop(nums[i-1])
+                add(nums[i+w-1])
+                if len(even) == len(odd):
+                    return w
+
+        return 0
+
+# 3719. Longest Balanced Subarray I (https://leetcode.com/problems/longest-balanced-subarray-i/description/) - Medium - 2026-02-10 - Duplicate
+class Solution:
+    '''
+    Time Complexity: O(n^2)
+    Space Complexity: O(n)
+    where, n is the length of nums
+    NOTE: Theoretically, both solutions have same time and space complexity, 
+    but this one is much more performant in real life, and simple to code, PREFER THIS!!
+    '''
+    def longestBalanced(self, nums: List[int]) -> int:
+        n = len(nums)
+        res = 0
+
+        for i in range(n):
+            seen = set()
+            balance = 0
+            if res > n-i:
+                return res
+            for j in range(i, n):
+                num = nums[j]
+                if num not in seen:
+                    balance += 1 if num%2==0 else -1
+                seen.add(num)
+                if balance == 0:
+                    res = max(res, j-i+1)
+        
+        return res
+
+
+# 3721. Longest Balanced Subarray II (https://leetcode.com/problems/longest-balanced-subarray-ii/description/) - Hard - 2026-02-11
+from collections import defaultdict, deque
+from typing import List
+class SegmentTree:
+    '''
+    Did not go through the solution yet!
+    '''
+    def __init__(self, n):
+        self.n = n
+        self.mn = [0] * (4 * n)
+        self.lazy = [0] * (4 * n)
+
+    def _push(self, i):
+        if self.lazy[i]:
+            for c in (i * 2, i * 2 + 1):
+                self.mn[c] += self.lazy[i]
+                self.lazy[c] += self.lazy[i]
+            self.lazy[i] = 0
+
+    def _add(self, i, l, r, ql, qr, v):
+        if ql > r or qr < l:
+            return
+        if ql <= l and r <= qr:
+            self.mn[i] += v
+            self.lazy[i] += v
+            return
+        self._push(i)
+        m = (l + r) // 2
+        self._add(i * 2, l, m, ql, qr, v)
+        self._add(i * 2 + 1, m + 1, r, ql, qr, v)
+        self.mn[i] = min(self.mn[i * 2], self.mn[i * 2 + 1])
+
+    def add(self, l, r, v):
+        if l <= r:
+            self._add(1, 0, self.n - 1, l, r, v)
+
+    def _rightmost_zero(self, i, l, r, ql):
+        if r < ql or self.mn[i] > 0:
+            return -1
+        if l == r:
+            return l
+        self._push(i)
+        m = (l + r) // 2
+        res = self._rightmost_zero(i * 2 + 1, m + 1, r, ql)
+        if res != -1:
+            return res
+        return self._rightmost_zero(i * 2, l, m, ql)
+
+    def rightmost_zero(self, l):
+        return self._rightmost_zero(1, 0, self.n - 1, l)
+
+class Solution:
+    def longestBalanced(self, nums: List[int]) -> int:
+        n = len(nums)
+        pos = defaultdict(deque)
+        for i, v in enumerate(nums):
+            pos[v].append(i)
+
+        seg = SegmentTree(n)
+
+        def sign(x):
+            return 1 if x % 2 else -1
+
+        # Initial contributions
+        for v, dq in pos.items():
+            p = dq[0]
+            seg.add(p, n - 1, sign(v))
+
+        ans = 0
+
+        for l in range(n):
+            r = seg.rightmost_zero(l)
+            if r != -1:
+                ans = max(ans, r - l + 1)
+
+            v = nums[l]
+            s = sign(v)
+            dq = pos[v]
+            dq.popleft()
+            nxt = dq[0] if dq else n
+
+            # remove old contribution
+            seg.add(l, nxt - 1, -s)
+
+        return ans
+
+
+# 799. Champagne Tower (https://leetcode.com/problems/champagne-tower/description/) - Medium - 2026-02-14
+class Solution:
+    '''
+    Time Complexity: O(R^2)
+    Space Complexity: O(R)
+    where, R is query_row
+    NOTE: You can optimize this further by only calculating first half of the row, since it's symmetric, 
+    but this is good enough for the constraints given in the problem, and it's simple to understand and implement, good job!
+    '''
+    def champagneTower(self, poured: int, query_row: int, query_glass: int) -> float:
+        curRow = [poured]
+        nextRow = [0.0]*2
+
+        for _ in range(query_row):
+            for j in range(len(curRow)):
+                excess = curRow[j]-1
+                if excess > 0:
+                    nextRow[j] += excess/2
+                    nextRow[j+1] += excess/2
+            curRow = nextRow
+            nextRow = [0.0] * (len(curRow) + 1)
+        
+        return 1.0 if curRow[query_glass] > 1 else curRow[query_glass]
+
+
+# 67. Add Binary (https://leetcode.com/problems/add-binary/description/) - Easy - 2026-02-15
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    where, n is the length of nums
+    Solved in 9 mins, had to lookup syntax! Good job!
+    NOTE: You were first trying to do it in different approach without looking up the syntax,
+    but it was taking too long, and you were over engineering it, 
+    so you decided to look up the syntax for converting binary string to integer and back to binary string, 
+    which is much simpler and more efficient, good job on knowing when to look up and when to try on your own, keep it up!
+    You could have solved this in less than 2 mins if you had looked up the syntax right away! 
+    Anyways bit manipulation questions are not very common in real life!
+    '''
+    def addBinary(self, a: str, b: str) -> str:
+        return str(bin(int(a, 2) + int(b, 2)))[2:]
+
+
+# 190. Reverse Bits (https://leetcode.com/problems/reverse-bits/description/) - Easy - 2026-02-16
+class Solution:
+    def reverseBits(self, n: int) -> int:
+        out = str(bin(n)[2:])
+        out = "0"*(32-len(out)) + out
+        out = out[::-1]
+        return int(out, 2)
+
+
+# 693. Binary Number with Alternating Bits (https://leetcode.com/problems/binary-number-with-alternating-bits/description/) - Easy - 2026-02-18
+class Solution:
+    '''
+    Time Complexity: O(1)
+    Space Complexity: O(1)
+    Python generates only 32 bits for integers, so the length is fixed
+    Solved in 2 mins, all by yourself! Good job!
+    '''
+    def hasAlternatingBits(self, n: int) -> bool:
+        s = bin(n)[2:]
+        for i in range(1, len(s)):
+            if s[i-1] == s[i]:
+                return False
+        return True
+
+
+# 696. Count Binary Substrings (https://leetcode.com/problems/count-binary-substrings/description/) - Easy - 2026-02-19
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    where, n is the length of s
+    '''
+    def countBinarySubstrings(self, s: str) -> int:
+        r = 0
+        count = 0
+        prevC = 0
+        while r < len(s):
+            check = s[r]
+            l = r
+            while l < len(s) and s[l] == check:
+                l += 1
+            count += min(l-r, prevC)
+            prevC = l-r
+            r = l
+        return count 
+
+
+# 762. Prime Number of Set Bits in Binary Representation (https://leetcode.com/problems/prime-number-of-set-bits-in-binary-representation/description/) - Easy - 2026-02-21
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    where, n = right - left + 1
+    Solved in 8 mins, all by yourself! Good job!
+    NOTE: Getting the count of set bits can be done more efficiently using Brian Kernighan’s Algorithm,
+    which repeatedly flips the least significant set bit of the number to zero and counts how many times this operation can be performed until the number becomes zero. 
+    This approach has a time complexity of O(k), where k is the number of set bits, which is more efficient than counting '1's in the binary string representation, especially for numbers with a large number of bits.
+    But for this problem, since the bit length is limited (up to 32 bits for integers), the string counting method is sufficient and simpler to implement, good job on choosing simplicity over optimization in this case!
+    That's why Time Complexity is O(n) and not O(n*k), because k is at most 32, which is a constant, so it can be considered O(1) in terms of big O notation, making the overall complexity O(n).
+    '''
+    def countPrimeSetBits(self, left: int, right: int) -> int:
+        primes = {2,3,5,7,11,13,17,19,23,29,31}
+        count = 0
+        for n in range(left, right+1):
+            if str(bin(n)[2:]).count('1') in primes:
+                count += 1
+        return count
+
+
+# 868. Binary Gap (https://leetcode.com/problems/binary-gap/description/) - Easy - 2026-02-22
+class Solution:
+    '''
+    Time Complexity: O(1)
+    Space Complexity: O(1)
+    Python generates only 32 bits for integers, so the length is usually fixed
+    Solved in 5 mins, all by yourself! Great job!
+    '''
+    def binaryGap(self, n: int) -> int:
+        b = bin(n)[2:]
+        m = 0
+        l = 0
+        for r in range(len(b)):
+            if b[r] == '1':
+                m = max(m, r-l)
+                l = r
+        return m
+
+
+# 1022. Sum of Root To Leaf Binary Numbers (https://leetcode.com/problems/sum-of-root-to-leaf-binary-numbers/description/) - Easy - 2026-02-24
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    '''
+    Time Complexity: O(n)
+    Space Complexity: O(n)
+    where, n is the number of nodes in the tree
+    Solved in 12 mins, all by yourself! Good job!
+    '''
+    def sumRootToLeaf(self, root: Optional[TreeNode]) -> int:
+        def traverse(node):
+            if not node:
+                return []
+            children = traverse(node.left) + traverse(node.right)
+            return [str(node.val)] if not children else [str(node.val) + child for child in children]
+        return sum(int(x,2) for x in traverse(root))
+
+# 1689. Partitioning Into Minimum Number Of Deci-Binary Numbers (https://leetcode.com/problems/partitioning-into-minimum-number-of-deci-binary-numbers/description/) - Medium - 2026-03-01
+class Solution:
+    '''
+    Time Complexity: O(l)
+    Space Complexity: O(l)
+    where, l is number of digits in n
+    Solved in 7 mins, after 1 hint! Ok job!
+    '''
+    def minPartitions(self, n: str) -> int:
+        if '9' in n: # Since we can only use digits 0 and 1 in deci-binary numbers, if there is a digit '9' in n, we will need at least 9 deci-binary numbers to sum up to it, so we can directly return 9 in that case, otherwise we need to find the maximum digit in n, which will be the minimum number of deci-binary numbers needed to sum up to n, since each deci-binary number can contribute at most 1 to each digit place.
+            return 9
+        return int(max(c for c in n))
+
+
+
+############## TEST CASES ##############
+
+# testCases = [
+#     ([["o","a","a","n"],["e","t","a","e"],["i","h","k","r"],["i","f","l","v"]], ["oath","pea","eat","rain"], ["oath","eat"]),
+#     ([["a","a"]], ["aa"], ["aa"])
+# ]
+
+# for board, words, ans in testCases:
+#     print(Solution().findWords(board, words), ans)
+
+
+
+# class Solution:
+#     def findWords(self, board: List[List[str]], words: List[str]) -> List[str]:
+        
+
+            
+
+
+
+# # Problem 33
+# class Solution:
+#     def search(self, nums: [int], target: int) -> int:        
+#         left, right = 0, len(nums) - 1
+        
+#         while left <= right:
+#             mid = (left + right) // 2
+#             if target == nums[mid]: return mid
+            
+#             if nums[left] <= nums[mid]:
+#                 if target > nums[mid] or target < nums[left]:   left = mid + 1
+#                 else:   right = mid - 1
+#             else:
+#                 if target < nums[mid] or target > nums[right]:  right = mid - 1
+#                 else:   left = mid + 1
+#         return -1
+    
+# tests = [
+#     ([4,5,6,7,0,1,2], 0, 4),
+#     ([4,5,6,7,0,1,2], 3, -1),
+# ]
+
+# for test in tests:
+#     print(Solution().search(test[0],test[1]), test[2])
+
+
+
+# # Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+
+# # class Solution:
+# def addTwoNumbers( l1: ListNode, l2: ListNode) -> ListNode:
+#         def addNodes(l1,l2,c):john
+#             v = l2.val + l1.val
+#             if v > 9:
+#                 l2.val = v - 10 + c
+#                 c = 1
+#             else:
+#                 l2.val = v + c
+#                 c = 0
+#             return c
+
+#         c = 0
+#         output = l2
+#         while l2.next and l1.next:
+#             c = addNodes(l1,l2,c)
+#             l1 = l1.next
+#             l2 = l2.next
+#         c = addNodes(l1,l2,c)
+#         if l1.next: l2.next = l1.next
+#         if l2.next and c:
+#             l2 = l2.next
+#             while l2.next and c:
+#                 if l2.val == 9:
+#                     l2.val = 0
+#                 else:
+#                     l2.val += 1
+#                     c = 0
+#                 l2 = l2.next
+#             if c:   
+#                 if l2.val == 9:
+#                     l2.val = 0
+#                 else:
+#                     l2.val += 1
+#                     c = 0
+#         if c:   l2.next = ListNode(val = 1)
+#         return output
+
+# def buildNode(l):
+#     temp = ListNode()
+#     L = temp
+#     for v in l:
+#         temp.val = v
+#         temp.next = ListNode()
+#         temp = temp.next
+#     temp = None
+#     return L
+        
+# testCases = [
+#     ([3,7],[9,2])
+# ]
+
+# for l1,l2 in testCases: print(addTwoNumbers(buildNode(l1),buildNode(l2)))
+
+# from collections import Counter, defaultdict
+
+# def prob(nums,k):
+#         numIndex = {}
+#         for i, num in enumerate(nums):
+#             if num in numIndex and i - numIndex[num] <= k:  return True
+#             numIndex[num] = i
+#         return False
+
+
+# testCases = [
+#     ([1,2,3,4,5,6,7,7,8],4)      
+# ]
+
+# for num,k in testCases: print(prob(num,k))
+
+# def prob(s):
+#         maxL = 0
+#         chSet = defaultdict(set)
+#         properWords = {}
+#         goldenWords = {}
+#         for i,word in enumerate(s):
+#             if len(set(word)) != len(word): continue
+#             for ch in word:  chSet[ch].add(i)
+        
+#         return maxL
+# questions = [
+#     ["un","iq","ue"]
+# ]
+
+# for s in questions:
+#     print(prob(s))
