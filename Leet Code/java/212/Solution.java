@@ -3,6 +3,8 @@ class Trie {
     public int numberOfChildren;
     public String wordValue;
 
+
+    
     public Trie() {
         children = new Trie[26];
         numberOfChildren = 0;
